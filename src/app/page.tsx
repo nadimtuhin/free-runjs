@@ -273,16 +273,29 @@ export default function Home() {
                       {tab.name}
                     </span>
                   )}
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setOriginalName(tab.name);
-                      setEditingTabId(tab.id);
-                    }}
-                    className="ml-2 p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ✎
-                  </button>
+                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setOriginalName(tab.name);
+                        setEditingTabId(tab.id);
+                      }}
+                      className="ml-2 p-1 hover:bg-gray-700 rounded"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        closeTab(tab.id);
+                      }}
+                      className="ml-1 p-1 hover:bg-gray-700 rounded text-red-400"
+                      disabled={tabs.length === 1}
+                      title={tabs.length === 1 ? "Can't delete the last tab" : "Delete tab"}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
