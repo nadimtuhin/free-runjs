@@ -506,6 +506,12 @@ function EditorContent() {
             >
               Packages ({installedPackages.length})
             </button>
+            <a
+              href="/credits"
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded"
+            >
+              Credits
+            </a>
             <button
               onClick={handleRunCode}
               className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
