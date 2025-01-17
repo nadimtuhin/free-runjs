@@ -55,6 +55,8 @@ export default function Home() {
   const hasInitialized = useRef(false)
   const [tabs, setTabs] = useState<EditorTab[]>([createNewTab(urlModuleType || 'esm')])
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id)
+  const [activeRightTab, setActiveRightTab] = useState<'output'>('output')
+  const [isPackagesModalOpen, setIsPackagesModalOpen] = useState(false)
 
   // Handle all client-side initialization in one effect
   useEffect(() => {
@@ -308,6 +310,42 @@ export default function Home() {
     }
   }
 
+  const handleUninstallPackage = async (packageName: string) => {
+    try {
+      const response = await fetch('/api/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: `
+            const { execSync } = require('child_process');
+            try {
+              execSync('npm uninstall ${packageName}', { stdio: 'inherit' });
+              console.log('Successfully uninstalled ${packageName}');
+            } catch (error) {
+              console.error('Failed to uninstall package:', error.message);
+            }
+          `,
+          moduleType: 'commonjs',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error)
+      }
+
+      if (data.installedPackages) {
+        setInstalledPackages(data.installedPackages)
+      }
+      setOutput(`Successfully uninstalled ${packageName}`)
+    } catch (error) {
+      setOutput(`Error uninstalling package: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
   return (
     <main className="flex min-h-screen">
       {/* Sidebar */}
@@ -424,49 +462,12 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={packageInput}
-                onChange={e => setPackageInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    handleInstallPackage()
-                  }
-                }}
-                placeholder="Package name"
-                className="bg-gray-800 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                onClick={handleInstallPackage}
-                className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isInstalling || !packageInput.trim()}
-              >
-                {isInstalling ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Installing...
-                  </>
-                ) : (
-                  'Install'
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => setIsPackagesModalOpen(true)}
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+            >
+              Packages ({installedPackages.length})
+            </button>
             <button
               onClick={handleRunCode}
               className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -519,25 +520,97 @@ export default function Home() {
               />
             )}
           </div>
-          <div className="flex-1 flex flex-col gap-4">
+          <div className="flex-1 flex flex-col">
             <div className="bg-gray-800 p-4 rounded min-h-[400px] font-mono whitespace-pre-wrap overflow-auto">
               {output || 'Output will appear here...'}
             </div>
-            {installedPackages.length > 0 && (
-              <div className="bg-gray-800 p-4 rounded">
-                <h2 className="text-sm font-semibold mb-2">Installed Packages:</h2>
-                <div className="flex flex-wrap gap-2">
-                  {installedPackages.map(pkg => (
-                    <span key={pkg} className="bg-gray-700 text-xs px-2 py-1 rounded">
-                      {pkg}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
+
+      {/* Packages Modal */}
+      {isPackagesModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h2 className="text-xl font-semibold text-white">Manage Packages</h2>
+              <button
+                onClick={() => setIsPackagesModalOpen(false)}
+                className="text-gray-400 hover:text-white focus:outline-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="text"
+                  value={packageInput}
+                  onChange={e => setPackageInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      handleInstallPackage()
+                    }
+                  }}
+                  placeholder="Package name"
+                  className="flex-1 bg-gray-800 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <button
+                  onClick={handleInstallPackage}
+                  className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isInstalling || !packageInput.trim()}
+                >
+                  {isInstalling ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Installing...
+                    </>
+                  ) : (
+                    'Install'
+                  )}
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {installedPackages.length === 0 ? (
+                  <p className="text-gray-400 text-center py-4">No packages installed</p>
+                ) : (
+                  installedPackages.map(pkg => (
+                    <div
+                      key={pkg}
+                      className="flex items-center justify-between bg-gray-800 p-2 rounded"
+                    >
+                      <span className="text-sm">{pkg}</span>
+                      <button
+                        onClick={() => handleUninstallPackage(pkg)}
+                        className="text-red-400 hover:text-red-300 focus:outline-none px-2 py-1 hover:bg-gray-700 rounded"
+                        title="Uninstall package"
+                      >
+                        Uninstall
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
