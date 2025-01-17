@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN mkdir -p public temp && \
     npm run build
 
 # Production image
-FROM node:20-alpine AS runner
+FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
