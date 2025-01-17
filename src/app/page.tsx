@@ -77,6 +77,8 @@ export default function Home() {
     }
     return tabs[0].id
   })
+  const [editingTabId, setEditingTabId] = useState<string | null>(null)
+  const [originalName, setOriginalName] = useState<string>('')
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
   const [installedPackages, setInstalledPackages] = useState<string[]>([])
@@ -241,20 +243,46 @@ export default function Home() {
               {tabs.map(tab => (
                 <div
                   key={tab.id}
-                  className={`p-2 rounded cursor-pointer ${
+                  className={`p-2 rounded cursor-pointer flex items-center justify-between group ${
                     tab.id === activeTabId ? 'bg-primary text-white' : 'hover:bg-gray-800'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
                 >
-                  <input
-                    type="text"
-                    value={tab.name}
-                    onChange={e => updateTabName(tab.id, e.target.value)}
-                    onClick={e => e.stopPropagation()}
-                    className={`bg-transparent outline-none w-full ${
-                      tab.id === activeTabId ? 'text-white' : 'text-gray-300'
-                    }`}
-                  />
+                  {editingTabId === tab.id ? (
+                    <input
+                      type="text"
+                      value={tab.name}
+                      onChange={e => updateTabName(tab.id, e.target.value)}
+                      onBlur={() => setEditingTabId(null)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          setEditingTabId(null);
+                        } else if (e.key === 'Escape') {
+                          updateTabName(tab.id, originalName);
+                          setEditingTabId(null);
+                        }
+                      }}
+                      onClick={e => e.stopPropagation()}
+                      className={`bg-transparent outline-none flex-1 ${
+                        tab.id === activeTabId ? 'text-white' : 'text-gray-300'
+                      }`}
+                      autoFocus
+                    />
+                  ) : (
+                    <span className={tab.id === activeTabId ? 'text-white' : 'text-gray-300'}>
+                      {tab.name}
+                    </span>
+                  )}
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setOriginalName(tab.name);
+                      setEditingTabId(tab.id);
+                    }}
+                    className="ml-2 p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ✎
+                  </button>
                 </div>
               ))}
             </div>
