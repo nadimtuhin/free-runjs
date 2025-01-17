@@ -11,8 +11,21 @@ export default function Home() {
 
   const handleRunCode = async () => {
     try {
-      // TODO: Implement API call to run code in Docker container
-      setOutput("Code execution not implemented yet");
+      const response = await fetch("/api/execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      setOutput(data.output || "No output");
     } catch (error: unknown) {
       setOutput(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
