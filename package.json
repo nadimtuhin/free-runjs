@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "mkdir -p temp/cjs temp/esm",
+    "postinstall": "mkdir -p temp/cjs temp/esm && cd temp/cjs && npm init -y && cd ../esm && npm init -y && echo '{\"type\":\"module\"}' >> package.json",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
