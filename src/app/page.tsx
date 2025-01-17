@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import Editor, { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -51,7 +51,7 @@ const isValidTabs = (tabs: any): tabs is EditorTab[] => {
   return Array.isArray(tabs) && tabs.length > 0 && tabs.every(isValidTab)
 }
 
-export default function Home() {
+function EditorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlModuleType = searchParams.get('moduleType') as ModuleType | null
@@ -60,7 +60,6 @@ export default function Home() {
   const hasInitialized = useRef(false)
   const [tabs, setTabs] = useState<EditorTab[]>([createNewTab(urlModuleType || 'esm')])
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id)
-  const [activeRightTab, setActiveRightTab] = useState<'output'>('output')
   const [isPackagesModalOpen, setIsPackagesModalOpen] = useState(false)
   const [installedPackages, setInstalledPackages] = useState<PackageInfo[]>([])
   const [packageInput, setPackageInput] = useState('')
@@ -68,6 +67,10 @@ export default function Home() {
   const [isLoadingPackages, setIsLoadingPackages] = useState(false)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const activeTab = tabs.find(tab => tab.id === activeTabId)
+  const [editingTabId, setEditingTabId] = useState<string | null>(null)
+  const [originalName, setOriginalName] = useState<string>('')
+  const [output, setOutput] = useState<string>('')
+  const [isRunning, setIsRunning] = useState(false)
 
   // Handle all client-side initialization in one effect
   useEffect(() => {
@@ -145,11 +148,6 @@ export default function Home() {
     if (!hasInitialized.current) return
     localStorage.setItem('active-tab-id', activeTabId)
   }, [activeTabId])
-
-  const [editingTabId, setEditingTabId] = useState<string | null>(null)
-  const [originalName, setOriginalName] = useState<string>('')
-  const [output, setOutput] = useState<string>('')
-  const [isRunning, setIsRunning] = useState(false)
 
   // Sync URL with active tab's module type and code
   useEffect(() => {
@@ -675,5 +673,17 @@ export default function Home() {
         </div>
       )}
     </main>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <EditorContent />
+    </Suspense>
   )
 }
