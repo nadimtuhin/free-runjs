@@ -1,49 +1,55 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Editor, { OnMount } from "@monaco-editor/react";
+import { useState, useRef } from 'react'
+import Editor, { OnMount } from '@monaco-editor/react'
+import type { editor } from 'monaco-editor'
 
 export default function Home() {
   const [code, setCode] = useState<string>(
     '// Write your JavaScript code here\nconsole.log("Hello World!");'
-  );
-  const [output, setOutput] = useState<string>("");
-  const [isRunning, setIsRunning] = useState(false);
+  )
+  const [output, setOutput] = useState<string>('')
+  const [isRunning, setIsRunning] = useState(false)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
-  const handleEditorMount: OnMount = (editor) => {
+  const handleEditorMount: OnMount = editor => {
+    editorRef.current = editor
     editor.addCommand(
       // Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter
       2048 | 3,
-      handleRunCode
-    );
-  };
+      () => handleRunCode()
+    )
+  }
 
   const handleRunCode = async () => {
-    if (isRunning) return;
+    if (isRunning) return
 
-    setIsRunning(true);
+    setIsRunning(true)
     try {
-      const response = await fetch("/api/execute", {
-        method: "POST",
+      const currentCode = editorRef.current?.getValue() || code
+      console.log('Running code:', currentCode)
+      const response = await fetch('/api/execute', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code }),
-      });
+        body: JSON.stringify({ code: currentCode }),
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error);
+        throw new Error(data.error)
       }
 
-      setOutput(data.output || "No output");
+      setOutput(data.output || 'No output')
+      console.log('Output:', data.output)
     } catch (error: unknown) {
-      setOutput(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      setOutput(`Error: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
-      setIsRunning(false);
+      setIsRunning(false)
     }
-  };
+  }
 
   return (
     <main className="flex min-h-screen flex-col p-4">
@@ -58,8 +64,20 @@ export default function Home() {
             {isRunning ? (
               <>
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
                 Running...
               </>
@@ -77,7 +95,7 @@ export default function Home() {
             defaultLanguage="javascript"
             theme="vs-dark"
             value={code}
-            onChange={(value) => setCode(value || "")}
+            onChange={value => setCode(value || '')}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
@@ -86,9 +104,9 @@ export default function Home() {
           />
         </div>
         <div className="flex-1 bg-gray-800 p-4 rounded min-h-[500px] font-mono whitespace-pre-wrap overflow-auto">
-          {output || "Output will appear here..."}
+          {output || 'Output will appear here...'}
         </div>
       </div>
     </main>
-  );
+  )
 }
