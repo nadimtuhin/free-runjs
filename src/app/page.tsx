@@ -8,14 +8,13 @@ export default function Home() {
     '// Write your JavaScript code here\nconsole.log("Hello World!");'
   );
   const [output, setOutput] = useState<string>("");
-  const [nodeVersion, setNodeVersion] = useState<string>("14");
 
   const handleRunCode = async () => {
     try {
       // TODO: Implement API call to run code in Docker container
       setOutput("Code execution not implemented yet");
-    } catch (error) {
-      setOutput(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      setOutput(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -24,16 +23,6 @@ export default function Home() {
       <nav className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">RunJS</h1>
         <div className="flex items-center gap-4">
-          <select
-            value={nodeVersion}
-            onChange={(e) => setNodeVersion(e.target.value)}
-            className="bg-gray-700 text-white px-3 py-1 rounded"
-          >
-            <option value="14">Node.js 14</option>
-            <option value="16">Node.js 16</option>
-            <option value="18">Node.js 18</option>
-            <option value="20">Node.js 20</option>
-          </select>
           <button
             onClick={handleRunCode}
             className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded"
