@@ -26,18 +26,56 @@ const createNewTab = (moduleType: ModuleType): EditorTab => ({
   moduleType,
 })
 
+// Validation functions
+const isValidModuleType = (type: any): type is ModuleType => {
+  return type === 'esm' || type === 'commonjs'
+}
+
+const isValidTab = (tab: any): tab is EditorTab => {
+  return (
+    tab &&
+    typeof tab === 'object' &&
+    typeof tab.id === 'string' &&
+    typeof tab.name === 'string' &&
+    typeof tab.code === 'string' &&
+    isValidModuleType(tab.moduleType)
+  )
+}
+
+const isValidTabs = (tabs: any): tabs is EditorTab[] => {
+  return Array.isArray(tabs) && tabs.length > 0 && tabs.every(isValidTab)
+}
+
 export default function Home() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlModuleType = searchParams.get('moduleType') as ModuleType | null
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const hasLoadedFromUrl = useRef(false)
   const [tabs, setTabs] = useState<EditorTab[]>(() => {
-    const savedTabs = typeof window !== 'undefined' ? localStorage.getItem('editor-tabs') : null
-    return savedTabs ? JSON.parse(savedTabs) : [createNewTab(urlModuleType || 'esm')]
+    try {
+      const savedTabs = typeof window !== 'undefined' ? localStorage.getItem('editor-tabs') : null
+      if (savedTabs) {
+        const parsedTabs = JSON.parse(savedTabs)
+        if (isValidTabs(parsedTabs)) {
+          return parsedTabs
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load tabs from localStorage:', error)
+    }
+    return [createNewTab(urlModuleType || 'esm')]
   })
   const [activeTabId, setActiveTabId] = useState<string>(() => {
-    const savedActiveTab = typeof window !== 'undefined' ? localStorage.getItem('active-tab-id') : null
-    return savedActiveTab || tabs[0].id
+    try {
+      const savedActiveTab = typeof window !== 'undefined' ? localStorage.getItem('active-tab-id') : null
+      if (savedActiveTab && tabs.some(tab => tab.id === savedActiveTab)) {
+        return savedActiveTab
+      }
+    } catch (error) {
+      console.error('Failed to load active tab from localStorage:', error)
+    }
+    return tabs[0].id
   })
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
@@ -53,15 +91,58 @@ export default function Home() {
     localStorage.setItem('active-tab-id', activeTabId)
   }, [activeTabId])
 
-  // Sync URL with active tab's module type
+  // Sync URL with active tab's module type and code
   useEffect(() => {
     const activeTab = tabs.find(tab => tab.id === activeTabId)
-    if (activeTab && urlModuleType !== activeTab.moduleType) {
+    if (activeTab) {
       const params = new URLSearchParams(searchParams)
       params.set('moduleType', activeTab.moduleType)
+
+      // Base64 encode the code and add it to URL
+      const encodedCode = btoa(activeTab.code)
+      params.set('code', encodedCode)
+
       router.replace(`?${params.toString()}`)
     }
   }, [activeTabId, tabs, urlModuleType, router, searchParams])
+
+  // Load code from URL on initial render only
+  useEffect(() => {
+    if (hasLoadedFromUrl.current) return
+    hasLoadedFromUrl.current = true
+
+    const encodedCode = searchParams.get('code')
+    if (encodedCode) {
+      try {
+        const decodedCode = atob(encodedCode)
+        const moduleType = searchParams.get('moduleType')
+
+        if (!isValidModuleType(moduleType)) {
+          throw new Error('Invalid module type in URL')
+        }
+
+        setTabs([{
+          id: crypto.randomUUID(),
+          name: 'Shared Code',
+          code: decodedCode,
+          moduleType
+        }])
+      } catch (error) {
+        console.error('Failed to load code from URL:', error)
+        // Fallback to default tab if URL data is invalid
+        const defaultTab = createNewTab('esm')
+        setTabs([defaultTab])
+        setActiveTabId(defaultTab.id)
+      }
+    }
+  }, [searchParams])
+
+  // Validate active tab exists
+  useEffect(() => {
+    if (!tabs.some(tab => tab.id === activeTabId)) {
+      setActiveTabId(tabs[0].id)
+    }
+  }, [tabs, activeTabId])
 
   const handleEditorMount: OnMount = editor => {
     editorRef.current = editor
