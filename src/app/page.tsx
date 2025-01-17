@@ -155,7 +155,7 @@ export default function Home() {
   useEffect(() => {
     const activeTab = tabs.find(tab => tab.id === activeTabId)
     if (activeTab) {
-      const params = new URLSearchParams(searchParams)
+      const params = new URLSearchParams(Array.from(searchParams.entries()))
       params.set('moduleType', activeTab.moduleType)
 
       // Base64 encode the code and add it to URL
