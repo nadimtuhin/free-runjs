@@ -111,6 +111,10 @@ export default function Home() {
     if (hasLoadedFromUrl.current) return
     hasLoadedFromUrl.current = true
 
+    // Only load from URL if there are no persisted tabs
+    const savedTabs = typeof window !== 'undefined' ? localStorage.getItem('editor-tabs') : null
+    if (savedTabs) return
+
     const encodedCode = searchParams.get('code')
     if (encodedCode) {
       try {
