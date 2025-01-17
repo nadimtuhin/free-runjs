@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Editor, { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type ModuleType = 'esm' | 'commonjs'
 
@@ -12,12 +13,32 @@ const defaultCode = {
 }
 
 export default function Home() {
-  const [moduleType, setModuleType] = useState<ModuleType>('esm')
-  const [code, setCode] = useState<string>(defaultCode[moduleType])
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlModuleType = searchParams.get('moduleType') as ModuleType | null
+  const [moduleType, setModuleType] = useState<ModuleType>(urlModuleType || 'esm')
+  const [code, setCode] = useState<string>(defaultCode[urlModuleType || 'esm'])
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
   const [installedPackages, setInstalledPackages] = useState<string[]>([])
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+
+  // Sync URL with module type
+  useEffect(() => {
+    if (urlModuleType !== moduleType) {
+      const params = new URLSearchParams(searchParams)
+      params.set('moduleType', moduleType)
+      router.replace(`?${params.toString()}`)
+    }
+  }, [moduleType, urlModuleType, router, searchParams])
+
+  // Sync state with URL changes
+  useEffect(() => {
+    if (urlModuleType && urlModuleType !== moduleType) {
+      setModuleType(urlModuleType)
+      setCode(defaultCode[urlModuleType])
+    }
+  }, [urlModuleType])
 
   const handleEditorMount: OnMount = editor => {
     editorRef.current = editor
