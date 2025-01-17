@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, moduleType }),
     });
 
     const data = await response.json();
