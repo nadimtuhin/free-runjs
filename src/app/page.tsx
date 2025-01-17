@@ -52,71 +52,35 @@ export default function Home() {
   const urlModuleType = searchParams.get('moduleType') as ModuleType | null
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const hasLoadedFromUrl = useRef(false)
-  const [tabs, setTabs] = useState<EditorTab[]>(() => {
+  const hasInitialized = useRef(false)
+  const [tabs, setTabs] = useState<EditorTab[]>([createNewTab(urlModuleType || 'esm')])
+  const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id)
+
+  // Handle all client-side initialization in one effect
+  useEffect(() => {
+    if (hasInitialized.current) return
+
+    // Try to load from localStorage first
     try {
-      const savedTabs = typeof window !== 'undefined' ? localStorage.getItem('editor-tabs') : null
+      const savedTabs = localStorage.getItem('editor-tabs')
       if (savedTabs) {
         const parsedTabs = JSON.parse(savedTabs)
         if (isValidTabs(parsedTabs)) {
-          return parsedTabs
+          setTabs(parsedTabs)
+          const savedActiveTab = localStorage.getItem('active-tab-id')
+          if (savedActiveTab && parsedTabs.some(tab => tab.id === savedActiveTab)) {
+            setActiveTabId(savedActiveTab)
+          }
+          hasLoadedFromUrl.current = true
+          hasInitialized.current = true
+          return
         }
       }
     } catch (error) {
       console.error('Failed to load tabs from localStorage:', error)
     }
-    return [createNewTab(urlModuleType || 'esm')]
-  })
-  const [activeTabId, setActiveTabId] = useState<string>(() => {
-    try {
-      const savedActiveTab = typeof window !== 'undefined' ? localStorage.getItem('active-tab-id') : null
-      if (savedActiveTab && tabs.some(tab => tab.id === savedActiveTab)) {
-        return savedActiveTab
-      }
-    } catch (error) {
-      console.error('Failed to load active tab from localStorage:', error)
-    }
-    return tabs[0].id
-  })
-  const [editingTabId, setEditingTabId] = useState<string | null>(null)
-  const [originalName, setOriginalName] = useState<string>('')
-  const [output, setOutput] = useState<string>('')
-  const [isRunning, setIsRunning] = useState(false)
-  const [installedPackages, setInstalledPackages] = useState<string[]>([])
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
-  // Persist tabs and active tab to localStorage
-  useEffect(() => {
-    localStorage.setItem('editor-tabs', JSON.stringify(tabs))
-  }, [tabs])
-
-  useEffect(() => {
-    localStorage.setItem('active-tab-id', activeTabId)
-  }, [activeTabId])
-
-  // Sync URL with active tab's module type and code
-  useEffect(() => {
-    const activeTab = tabs.find(tab => tab.id === activeTabId)
-    if (activeTab) {
-      const params = new URLSearchParams(searchParams)
-      params.set('moduleType', activeTab.moduleType)
-
-      // Base64 encode the code and add it to URL
-      const encodedCode = btoa(activeTab.code)
-      params.set('code', encodedCode)
-
-      router.replace(`?${params.toString()}`)
-    }
-  }, [activeTabId, tabs, urlModuleType, router, searchParams])
-
-  // Load code from URL on initial render only
-  useEffect(() => {
-    if (hasLoadedFromUrl.current) return
-    hasLoadedFromUrl.current = true
-
-    // Only load from URL if there are no persisted tabs
-    const savedTabs = typeof window !== 'undefined' ? localStorage.getItem('editor-tabs') : null
-    if (savedTabs) return
-
+    // If no localStorage data, try URL params
     const encodedCode = searchParams.get('code')
     if (encodedCode) {
       try {
@@ -135,13 +99,47 @@ export default function Home() {
         }])
       } catch (error) {
         console.error('Failed to load code from URL:', error)
-        // Fallback to default tab if URL data is invalid
         const defaultTab = createNewTab('esm')
         setTabs([defaultTab])
         setActiveTabId(defaultTab.id)
       }
     }
-  }, [searchParams])
+    hasLoadedFromUrl.current = true
+    hasInitialized.current = true
+  }, [searchParams, urlModuleType])
+
+  // Persist tabs and active tab to localStorage
+  useEffect(() => {
+    if (!hasInitialized.current) return
+    localStorage.setItem('editor-tabs', JSON.stringify(tabs))
+  }, [tabs])
+
+  useEffect(() => {
+    if (!hasInitialized.current) return
+    localStorage.setItem('active-tab-id', activeTabId)
+  }, [activeTabId])
+
+  const [editingTabId, setEditingTabId] = useState<string | null>(null)
+  const [originalName, setOriginalName] = useState<string>('')
+  const [output, setOutput] = useState<string>('')
+  const [isRunning, setIsRunning] = useState(false)
+  const [installedPackages, setInstalledPackages] = useState<string[]>([])
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+
+  // Sync URL with active tab's module type and code
+  useEffect(() => {
+    const activeTab = tabs.find(tab => tab.id === activeTabId)
+    if (activeTab) {
+      const params = new URLSearchParams(searchParams)
+      params.set('moduleType', activeTab.moduleType)
+
+      // Base64 encode the code and add it to URL
+      const encodedCode = btoa(activeTab.code)
+      params.set('code', encodedCode)
+
+      router.replace(`?${params.toString()}`)
+    }
+  }, [activeTabId, tabs, urlModuleType, router, searchParams])
 
   // Validate active tab exists
   useEffect(() => {
