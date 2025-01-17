@@ -7,38 +7,61 @@ import { useRouter, useSearchParams } from 'next/navigation'
 
 type ModuleType = 'esm' | 'commonjs'
 
+type EditorTab = {
+  id: string
+  name: string
+  code: string
+  moduleType: ModuleType
+}
+
 const defaultCode = {
   esm: '// Write your JavaScript code here using ES Modules\nimport axios from "axios";\nconsole.log("Hello World!");',
   commonjs: '// Write your JavaScript code here using CommonJS\nconst axios = require("axios");\nconsole.log("Hello World!");'
 }
 
+const createNewTab = (moduleType: ModuleType): EditorTab => ({
+  id: crypto.randomUUID(),
+  name: 'Untitled',
+  code: defaultCode[moduleType],
+  moduleType,
+})
+
 export default function Home() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlModuleType = searchParams.get('moduleType') as ModuleType | null
-  const [moduleType, setModuleType] = useState<ModuleType>(urlModuleType || 'esm')
-  const [code, setCode] = useState<string>(defaultCode[urlModuleType || 'esm'])
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [tabs, setTabs] = useState<EditorTab[]>(() => {
+    const savedTabs = typeof window !== 'undefined' ? localStorage.getItem('editor-tabs') : null
+    return savedTabs ? JSON.parse(savedTabs) : [createNewTab(urlModuleType || 'esm')]
+  })
+  const [activeTabId, setActiveTabId] = useState<string>(() => {
+    const savedActiveTab = typeof window !== 'undefined' ? localStorage.getItem('active-tab-id') : null
+    return savedActiveTab || tabs[0].id
+  })
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
   const [installedPackages, setInstalledPackages] = useState<string[]>([])
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
-  // Sync URL with module type
+  // Persist tabs and active tab to localStorage
   useEffect(() => {
-    if (urlModuleType !== moduleType) {
+    localStorage.setItem('editor-tabs', JSON.stringify(tabs))
+  }, [tabs])
+
+  useEffect(() => {
+    localStorage.setItem('active-tab-id', activeTabId)
+  }, [activeTabId])
+
+  // Sync URL with active tab's module type
+  useEffect(() => {
+    const activeTab = tabs.find(tab => tab.id === activeTabId)
+    if (activeTab && urlModuleType !== activeTab.moduleType) {
       const params = new URLSearchParams(searchParams)
-      params.set('moduleType', moduleType)
+      params.set('moduleType', activeTab.moduleType)
       router.replace(`?${params.toString()}`)
     }
-  }, [moduleType, urlModuleType, router, searchParams])
-
-  // Sync state with URL changes
-  useEffect(() => {
-    if (urlModuleType && urlModuleType !== moduleType) {
-      setModuleType(urlModuleType)
-      setCode(defaultCode[urlModuleType])
-    }
-  }, [urlModuleType])
+  }, [activeTabId, tabs, urlModuleType, router, searchParams])
 
   const handleEditorMount: OnMount = editor => {
     editorRef.current = editor
@@ -50,23 +73,27 @@ export default function Home() {
   }
 
   const handleModuleTypeChange = (type: ModuleType) => {
-    setModuleType(type)
-    setCode(defaultCode[type])
+    const updatedTabs = tabs.map(tab =>
+      tab.id === activeTabId ? { ...tab, moduleType: type, code: defaultCode[type] } : tab
+    )
+    setTabs(updatedTabs)
   }
 
   const handleRunCode = async () => {
     if (isRunning) return
 
+    const activeTab = tabs.find(tab => tab.id === activeTabId)
+    if (!activeTab) return
+
     setIsRunning(true)
     try {
-      const currentCode = editorRef.current?.getValue() || code
-      console.log('Running code:', currentCode)
+      const currentCode = editorRef.current?.getValue() || activeTab.code
       const response = await fetch('/api/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code: currentCode, moduleType }),
+        body: JSON.stringify({ code: currentCode, moduleType: activeTab.moduleType }),
       })
 
       const data = await response.json()
@@ -79,7 +106,6 @@ export default function Home() {
       if (data.installedPackages) {
         setInstalledPackages(data.installedPackages)
       }
-      console.log('Output:', data.output)
     } catch (error: unknown) {
       setOutput(`Error: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
@@ -87,101 +113,174 @@ export default function Home() {
     }
   }
 
-  return (
-    <main className="flex min-h-screen flex-col p-4">
-      <nav className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">RunJS</h1>
-          <div className="flex items-center gap-2 bg-gray-800 p-1 rounded">
-            <button
-              onClick={() => handleModuleTypeChange('esm')}
-              className={`px-3 py-1 rounded ${
-                moduleType === 'esm'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              ES Modules
-            </button>
-            <button
-              onClick={() => handleModuleTypeChange('commonjs')}
-              className={`px-3 py-1 rounded ${
-                moduleType === 'commonjs'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              CommonJS
-            </button>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleRunCode}
-            className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isRunning}
-          >
-            {isRunning ? (
-              <>
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Running...
-              </>
-            ) : (
-              'Run'
-            )}
-          </button>
-        </div>
-      </nav>
+  const addNewTab = () => {
+    const activeTab = tabs.find(tab => tab.id === activeTabId)
+    const newTab = createNewTab(activeTab?.moduleType || 'esm')
+    setTabs([...tabs, newTab])
+    setActiveTabId(newTab.id)
+  }
 
-      <div className="flex flex-1 gap-4">
-        <div className="flex-1 min-h-[500px]">
-          <Editor
-            height="100%"
-            defaultLanguage="javascript"
-            theme="vs-dark"
-            value={code}
-            onChange={value => setCode(value || '')}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-            }}
-            onMount={handleEditorMount}
-          />
-        </div>
-        <div className="flex-1 flex flex-col gap-4">
-          <div className="bg-gray-800 p-4 rounded min-h-[400px] font-mono whitespace-pre-wrap overflow-auto">
-            {output || 'Output will appear here...'}
-          </div>
-          {installedPackages.length > 0 && (
-            <div className="bg-gray-800 p-4 rounded">
-              <h2 className="text-sm font-semibold mb-2">Installed Packages:</h2>
-              <div className="flex flex-wrap gap-2">
-                {installedPackages.map(pkg => (
-                  <span
-                    key={pkg}
-                    className="bg-gray-700 text-xs px-2 py-1 rounded"
-                  >
-                    {pkg}
-                  </span>
-                ))}
-              </div>
+  const closeTab = (tabId: string) => {
+    if (tabs.length === 1) return
+    const newTabs = tabs.filter(tab => tab.id !== tabId)
+    setTabs(newTabs)
+    if (activeTabId === tabId) {
+      setActiveTabId(newTabs[0].id)
+    }
+  }
+
+  const updateTabName = (tabId: string, newName: string) => {
+    setTabs(tabs.map(tab => (tab.id === tabId ? { ...tab, name: newName } : tab)))
+  }
+
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
+
+  return (
+    <main className="flex min-h-screen">
+      {/* Sidebar */}
+      <div
+        className={`bg-gray-900 transition-all duration-300 ${
+          isSidebarOpen ? 'w-64' : 'w-12'
+        } flex flex-col`}
+      >
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-2 hover:bg-gray-800 text-gray-400 hover:text-white"
+        >
+          {isSidebarOpen ? '◀' : '▶'}
+        </button>
+        {isSidebarOpen && (
+          <div className="p-4">
+            <h2 className="text-lg font-semibold mb-4">Files</h2>
+            <div className="space-y-2">
+              {tabs.map(tab => (
+                <div
+                  key={tab.id}
+                  className={`p-2 rounded cursor-pointer ${
+                    tab.id === activeTabId ? 'bg-primary text-white' : 'hover:bg-gray-800'
+                  }`}
+                  onClick={() => setActiveTabId(tab.id)}
+                >
+                  <input
+                    type="text"
+                    value={tab.name}
+                    onChange={e => updateTabName(tab.id, e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                    className={`bg-transparent outline-none w-full ${
+                      tab.id === activeTabId ? 'text-white' : 'text-gray-300'
+                    }`}
+                  />
+                </div>
+              ))}
             </div>
-          )}
+            <button
+              onClick={addNewTab}
+              className="mt-4 w-full p-2 bg-gray-800 hover:bg-gray-700 rounded text-white"
+            >
+              + New File
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4">
+        <nav className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold">RunJS</h1>
+            <div className="flex items-center gap-2 bg-gray-800 p-1 rounded">
+              <button
+                onClick={() => handleModuleTypeChange('esm')}
+                className={`px-3 py-1 rounded ${
+                  activeTab?.moduleType === 'esm'
+                    ? 'bg-primary text-white'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                ES Modules
+              </button>
+              <button
+                onClick={() => handleModuleTypeChange('commonjs')}
+                className={`px-3 py-1 rounded ${
+                  activeTab?.moduleType === 'commonjs'
+                    ? 'bg-primary text-white'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                CommonJS
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleRunCode}
+              className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isRunning}
+            >
+              {isRunning ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Running...
+                </>
+              ) : (
+                'Run'
+              )}
+            </button>
+          </div>
+        </nav>
+
+        <div className="flex flex-1 gap-4">
+          <div className="flex-1 min-h-[500px]">
+            {activeTab && (
+              <Editor
+                height="100%"
+                defaultLanguage="javascript"
+                theme="vs-dark"
+                value={activeTab.code}
+                onChange={value => {
+                  if (!value) return
+                  setTabs(tabs.map(tab => (tab.id === activeTabId ? { ...tab, code: value } : tab)))
+                }}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                }}
+                onMount={handleEditorMount}
+              />
+            )}
+          </div>
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="bg-gray-800 p-4 rounded min-h-[400px] font-mono whitespace-pre-wrap overflow-auto">
+              {output || 'Output will appear here...'}
+            </div>
+            {installedPackages.length > 0 && (
+              <div className="bg-gray-800 p-4 rounded">
+                <h2 className="text-sm font-semibold mb-2">Installed Packages:</h2>
+                <div className="flex flex-wrap gap-2">
+                  {installedPackages.map(pkg => (
+                    <span key={pkg} className="bg-gray-700 text-xs px-2 py-1 rounded">
+                      {pkg}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </main>
