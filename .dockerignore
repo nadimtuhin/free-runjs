@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+.next
+*.md
+.env*
+npm-debug.log*
+.dockerignore
+Dockerfile
+.eslintrc*
+.prettier*
+.editorconfig
+*.log
+temp
