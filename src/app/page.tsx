@@ -4,12 +4,19 @@ import { useState, useRef } from 'react'
 import Editor, { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 
+type ModuleType = 'esm' | 'commonjs'
+
+const defaultCode = {
+  esm: '// Write your JavaScript code here using ES Modules\nimport axios from "axios";\nconsole.log("Hello World!");',
+  commonjs: '// Write your JavaScript code here using CommonJS\nconst axios = require("axios");\nconsole.log("Hello World!");'
+}
+
 export default function Home() {
-  const [code, setCode] = useState<string>(
-    '// Write your JavaScript code here\nconsole.log("Hello World!");'
-  )
+  const [moduleType, setModuleType] = useState<ModuleType>('esm')
+  const [code, setCode] = useState<string>(defaultCode[moduleType])
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
+  const [installedPackages, setInstalledPackages] = useState<string[]>([])
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
   const handleEditorMount: OnMount = editor => {
@@ -19,6 +26,11 @@ export default function Home() {
       2048 | 3,
       () => handleRunCode()
     )
+  }
+
+  const handleModuleTypeChange = (type: ModuleType) => {
+    setModuleType(type)
+    setCode(defaultCode[type])
   }
 
   const handleRunCode = async () => {
@@ -33,7 +45,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code: currentCode }),
+        body: JSON.stringify({ code: currentCode, moduleType }),
       })
 
       const data = await response.json()
@@ -43,6 +55,9 @@ export default function Home() {
       }
 
       setOutput(data.output || 'No output')
+      if (data.installedPackages) {
+        setInstalledPackages(data.installedPackages)
+      }
       console.log('Output:', data.output)
     } catch (error: unknown) {
       setOutput(`Error: ${error instanceof Error ? error.message : String(error)}`)
@@ -54,7 +69,31 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col p-4">
       <nav className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">RunJS</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">RunJS</h1>
+          <div className="flex items-center gap-2 bg-gray-800 p-1 rounded">
+            <button
+              onClick={() => handleModuleTypeChange('esm')}
+              className={`px-3 py-1 rounded ${
+                moduleType === 'esm'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              ES Modules
+            </button>
+            <button
+              onClick={() => handleModuleTypeChange('commonjs')}
+              className={`px-3 py-1 rounded ${
+                moduleType === 'commonjs'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              CommonJS
+            </button>
+          </div>
+        </div>
         <div className="flex items-center gap-4">
           <button
             onClick={handleRunCode}
@@ -103,8 +142,25 @@ export default function Home() {
             onMount={handleEditorMount}
           />
         </div>
-        <div className="flex-1 bg-gray-800 p-4 rounded min-h-[500px] font-mono whitespace-pre-wrap overflow-auto">
-          {output || 'Output will appear here...'}
+        <div className="flex-1 flex flex-col gap-4">
+          <div className="bg-gray-800 p-4 rounded min-h-[400px] font-mono whitespace-pre-wrap overflow-auto">
+            {output || 'Output will appear here...'}
+          </div>
+          {installedPackages.length > 0 && (
+            <div className="bg-gray-800 p-4 rounded">
+              <h2 className="text-sm font-semibold mb-2">Installed Packages:</h2>
+              <div className="flex flex-wrap gap-2">
+                {installedPackages.map(pkg => (
+                  <span
+                    key={pkg}
+                    className="bg-gray-700 text-xs px-2 py-1 rounded"
+                  >
+                    {pkg}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </main>

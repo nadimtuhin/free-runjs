@@ -5,26 +5,42 @@ import { writeFile, mkdir, readFile, access } from 'fs/promises';
 import { join } from 'path';
 
 const execAsync = promisify(exec);
-const TEMP_DIR = join(process.cwd(), 'temp');
+const BASE_TEMP_DIR = join(process.cwd(), 'temp');
+
+type ModuleType = 'esm' | 'commonjs';
+
+function getTempDir(moduleType: ModuleType): string {
+  return join(BASE_TEMP_DIR, moduleType);
+}
 
 // Initialize temp directory and package.json
-async function initTempDir() {
-  await mkdir(TEMP_DIR, { recursive: true });
-  const packageJsonPath = join(TEMP_DIR, 'package.json');
+async function initTempDir(moduleType: ModuleType) {
+  const tempDir = getTempDir(moduleType);
+  await mkdir(tempDir, { recursive: true });
+  const packageJsonPath = join(tempDir, 'package.json');
 
   try {
     await access(packageJsonPath);
+    // Update package.json type if needed
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
+    if (moduleType === 'esm' && packageJson.type !== 'module') {
+      packageJson.type = 'module';
+      await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    } else if (moduleType === 'commonjs' && packageJson.type === 'module') {
+      delete packageJson.type;
+      await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    }
   } catch {
     // Create package.json if it doesn't exist
     await writeFile(packageJsonPath, JSON.stringify({
-      name: 'runjs-temp',
+      name: `runjs-temp-${moduleType}`,
       version: '1.0.0',
-      type: 'module',
+      ...(moduleType === 'esm' ? { type: 'module' } : {}),
       dependencies: {}
     }, null, 2));
 
     // Initialize npm
-    await execAsync('npm init -y', { cwd: TEMP_DIR });
+    await execAsync('npm init -y', { cwd: tempDir });
   }
 }
 
@@ -50,9 +66,9 @@ function extractPackages(code: string): string[] {
   return Array.from(packages)
 }
 
-async function getInstalledPackages(): Promise<Set<string>> {
+async function getInstalledPackages(moduleType: ModuleType): Promise<Set<string>> {
   try {
-    const packageJsonPath = join(TEMP_DIR, 'package.json');
+    const packageJsonPath = join(getTempDir(moduleType), 'package.json');
     const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
     return new Set(Object.keys(packageJson.dependencies || {}));
   } catch {
@@ -60,9 +76,9 @@ async function getInstalledPackages(): Promise<Set<string>> {
   }
 }
 
-async function installPackages(packages: string[]): Promise<string> {
+async function installPackages(packages: string[], moduleType: ModuleType): Promise<string> {
   try {
-    const installedPackages = await getInstalledPackages();
+    const installedPackages = await getInstalledPackages(moduleType);
     const packagesToInstall = packages.filter(pkg => !installedPackages.has(pkg));
 
     if (packagesToInstall.length === 0) {
@@ -70,7 +86,7 @@ async function installPackages(packages: string[]): Promise<string> {
     }
 
     const { stdout, stderr } = await execAsync(`npm install ${packagesToInstall.join(' ')}`, {
-      cwd: TEMP_DIR
+      cwd: getTempDir(moduleType)
     });
     return stdout + stderr;
   } catch (error) {
@@ -78,16 +94,26 @@ async function installPackages(packages: string[]): Promise<string> {
   }
 }
 
-async function executeCode(code: string): Promise<string> {
-  // Determine if code uses ES modules
-  const isESM = code.includes('import') || code.includes('export')
+async function executeCode(code: string, moduleType: ModuleType): Promise<string> {
+  const tempDir = getTempDir(moduleType);
 
-  // Prepare the code with proper module setup
-  let executionCode = ''
-  if (isESM) {
-    executionCode = `
-      import { writeFile } from 'fs/promises';
-      import { join } from 'path';
+  // Create separate files for module setup and user code
+  const setupFilename = moduleType === 'esm' ? 'setup.mjs' : 'setup.cjs';
+  const codeFilename = moduleType === 'esm' ? 'code.mjs' : 'code.cjs';
+
+  // Write user code to a separate file
+  const codePath = join(tempDir, codeFilename);
+  await writeFile(codePath, code);
+
+  // Prepare the setup code that will execute the user's code
+  let setupCode = '';
+  if (moduleType === 'esm') {
+    setupCode = `
+      import { fileURLToPath } from 'url';
+      import { dirname, join } from 'path';
+
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
 
       let output = '';
       const originalConsoleLog = console.log;
@@ -95,21 +121,20 @@ async function executeCode(code: string): Promise<string> {
         output += args.map(arg =>
           typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(" ") + "\\n";
-        process.stdout.write(output);
       };
 
       try {
-        ${code}
+        await import('./${codeFilename}');
       } catch (error) {
         console.log("Error:", error.message);
       }
 
       console.log = originalConsoleLog;
-    `
+      process.stdout.write(output);
+    `;
   } else {
-    executionCode = `
-      const { writeFile } = require('fs/promises');
-      const { join } = require('path');
+    setupCode = `
+      const path = require('path');
 
       let output = '';
       const originalConsoleLog = console.log;
@@ -117,65 +142,69 @@ async function executeCode(code: string): Promise<string> {
         output += args.map(arg =>
           typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(" ") + "\\n";
-        process.stdout.write(output);
       };
 
       try {
-        ${code}
+        require('./${codeFilename}');
       } catch (error) {
         console.log("Error:", error.message);
       }
 
       console.log = originalConsoleLog;
-    `
+      process.stdout.write(output);
+    `;
   }
 
-  // Write code to temporary file
-  const filename = isESM ? 'temp.mjs' : 'temp.cjs'
-  const filepath = join(TEMP_DIR, filename)
-  await writeFile(filepath, executionCode)
+  // Write setup code
+  const setupPath = join(tempDir, setupFilename);
+  await writeFile(setupPath, setupCode);
 
   // Execute the code
   try {
-    const { stdout, stderr } = await execAsync(`node ${filepath}`, {
-      cwd: TEMP_DIR
-    })
+    const { stdout, stderr } = await execAsync(`node ${setupPath}`, {
+      cwd: tempDir,
+      env: {
+        ...process.env,
+        NODE_PATH: join(tempDir, 'node_modules')
+      }
+    });
 
-    if (stderr) {
-      return `Error: ${stderr}`
+    if (stderr && !stderr.includes('ExperimentalWarning')) {
+      return `Error: ${stderr}`;
     }
 
-    return stdout || 'No output'
+    return stdout || 'No output';
   } catch (error) {
-    throw new Error(`Execution failed: ${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(`Execution failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
-// Initialize temp directory when module loads
-initTempDir().catch(console.error);
-
 export async function POST(request: Request) {
   try {
-    const { code } = await request.json()
+    const { code, moduleType = 'esm' } = await request.json() as { code: string; moduleType?: ModuleType }
+
+    // Initialize temp directory with correct module type
+    await initTempDir(moduleType)
 
     // Extract required packages
     const packages = extractPackages(code)
 
     // Install packages if needed
     if (packages.length > 0) {
-      const installOutput = await installPackages(packages)
+      const installOutput = await installPackages(packages, moduleType)
       console.log('Package installation output:', installOutput)
     }
 
     // Execute the code
-    const output = await executeCode(code)
+    const output = await executeCode(code, moduleType)
 
     // Get current installed packages
-    const installedPackages = Array.from(await getInstalledPackages())
+    const installedPackages = Array.from(await getInstalledPackages(moduleType))
 
     return NextResponse.json({
       output,
-      installedPackages
+      installedPackages,
+      moduleType
     })
   } catch (error) {
     return NextResponse.json(
