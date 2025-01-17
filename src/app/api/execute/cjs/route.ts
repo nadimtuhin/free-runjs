@@ -123,17 +123,20 @@ function extractPackages(code: string): string[] {
   return Array.from(packages);
 }
 
-async function getInstalledPackages(): Promise<Set<string>> {
+async function getInstalledPackages(): Promise<{ name: string; version: string }[]> {
   console.debug('[getInstalledPackages] Reading installed packages');
   try {
     const packageJsonPath = join(getTempDir(), 'package.json');
     const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
-    const packages = new Set(Object.keys(packageJson.dependencies || {}));
-    console.debug('[getInstalledPackages] Found packages:', Array.from(packages));
+    const packages = Object.entries(packageJson.dependencies || {}).map(([name, version]) => ({
+      name,
+      version: version as string
+    }));
+    console.debug('[getInstalledPackages] Found packages:', packages);
     return packages;
   } catch {
     console.debug('[getInstalledPackages] No packages found');
-    return new Set();
+    return [];
   }
 }
 
@@ -141,7 +144,7 @@ async function installPackages(packages: string[]): Promise<string> {
   console.debug('[installPackages] Starting package installation:', packages);
   try {
     const installedPackages = await getInstalledPackages();
-    const packagesToInstall = packages.filter(pkg => !installedPackages.has(pkg));
+    const packagesToInstall = packages.filter(pkg => !installedPackages.some(p => p.name === pkg));
 
     if (packagesToInstall.length === 0) {
       console.debug('[installPackages] All packages already installed');
@@ -250,7 +253,7 @@ export async function POST(request: Request) {
     const output = await executeCode(code);
 
     // Get current installed packages
-    const installedPackages = Array.from(await getInstalledPackages());
+    const installedPackages = await getInstalledPackages();
     console.debug('[POST] Currently installed packages:', installedPackages);
 
     console.debug('[POST] Request completed successfully');

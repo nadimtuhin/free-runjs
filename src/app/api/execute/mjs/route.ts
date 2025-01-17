@@ -70,20 +70,23 @@ function extractPackages(code: string): string[] {
   return Array.from(packages);
 }
 
-async function getInstalledPackages(): Promise<Set<string>> {
+async function getInstalledPackages(): Promise<{ name: string; version: string }[]> {
   try {
     const packageJsonPath = join(getTempDir(), 'package.json');
     const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
-    return new Set(Object.keys(packageJson.dependencies || {}));
+    return Object.entries(packageJson.dependencies || {}).map(([name, version]) => ({
+      name,
+      version: version as string
+    }));
   } catch {
-    return new Set();
+    return [];
   }
 }
 
 async function installPackages(packages: string[]): Promise<string> {
   try {
     const installedPackages = await getInstalledPackages();
-    const packagesToInstall = packages.filter(pkg => !installedPackages.has(pkg));
+    const packagesToInstall = packages.filter(pkg => !installedPackages.some(p => p.name === pkg));
 
     if (packagesToInstall.length === 0) {
       return 'All packages already installed';
@@ -177,7 +180,7 @@ export async function POST(request: Request) {
     const output = await executeCode(code);
 
     // Get current installed packages
-    const installedPackages = Array.from(await getInstalledPackages());
+    const installedPackages = await getInstalledPackages();
 
     return NextResponse.json({
       output,

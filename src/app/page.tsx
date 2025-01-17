@@ -14,6 +14,11 @@ type EditorTab = {
   moduleType: ModuleType
 }
 
+type PackageInfo = {
+  name: string
+  version: string
+}
+
 const defaultCode = {
   esm: '// Write your JavaScript code here using ES Modules\nimport axios from "axios";\nconsole.log("Hello World!");',
   commonjs: '// Write your JavaScript code here using CommonJS\nconst axios = require("axios");\nconsole.log("Hello World!");'
@@ -57,6 +62,12 @@ export default function Home() {
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id)
   const [activeRightTab, setActiveRightTab] = useState<'output'>('output')
   const [isPackagesModalOpen, setIsPackagesModalOpen] = useState(false)
+  const [installedPackages, setInstalledPackages] = useState<PackageInfo[]>([])
+  const [packageInput, setPackageInput] = useState('')
+  const [isInstalling, setIsInstalling] = useState(false)
+  const [isLoadingPackages, setIsLoadingPackages] = useState(false)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
 
   // Handle all client-side initialization in one effect
   useEffect(() => {
@@ -110,6 +121,20 @@ export default function Home() {
     hasInitialized.current = true
   }, [searchParams, urlModuleType])
 
+  // Load packages on initialization
+  useEffect(() => {
+    if (hasInitialized.current) {
+      fetchInstalledPackages()
+    }
+  }, [hasInitialized.current])
+
+  // Reload packages when active tab or module type changes
+  useEffect(() => {
+    if (hasInitialized.current) {
+      fetchInstalledPackages()
+    }
+  }, [activeTabId, activeTab?.moduleType])
+
   // Persist tabs and active tab to localStorage
   useEffect(() => {
     if (!hasInitialized.current) return
@@ -125,10 +150,6 @@ export default function Home() {
   const [originalName, setOriginalName] = useState<string>('')
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
-  const [installedPackages, setInstalledPackages] = useState<string[]>([])
-  const [packageInput, setPackageInput] = useState('')
-  const [isInstalling, setIsInstalling] = useState(false)
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
   // Sync URL with active tab's module type and code
   useEffect(() => {
@@ -274,8 +295,31 @@ export default function Home() {
     setTabs(tabs.map(tab => (tab.id === tabId ? { ...tab, name: newName } : tab)))
   }
 
-  const activeTab = tabs.find(tab => tab.id === activeTabId)
+  const fetchInstalledPackages = async () => {
+    setIsLoadingPackages(true)
+    try {
+      const response = await fetch('/api/packages')
+      const data = await response.json()
+      if (response.ok) {
+        setInstalledPackages(data.packages)
+      } else {
+        console.error('Failed to fetch packages:', data.error)
+      }
+    } catch (error) {
+      console.error('Failed to fetch packages:', error)
+    } finally {
+      setIsLoadingPackages(false)
+    }
+  }
 
+  // Fetch packages when modal opens
+  useEffect(() => {
+    if (isPackagesModalOpen) {
+      fetchInstalledPackages()
+    }
+  }, [isPackagesModalOpen])
+
+  // Update packages list after installation/uninstallation
   const handleInstallPackage = async () => {
     if (!packageInput.trim() || isInstalling) return
 
@@ -298,11 +342,9 @@ export default function Home() {
         throw new Error(data.error)
       }
 
-      if (data.installedPackages) {
-        setInstalledPackages(data.installedPackages)
-      }
-      setPackageInput('')
       setOutput(`Successfully installed ${packageInput.trim()}`)
+      setPackageInput('')
+      await fetchInstalledPackages()
     } catch (error) {
       setOutput(`Error installing package: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
@@ -337,10 +379,8 @@ export default function Home() {
         throw new Error(data.error)
       }
 
-      if (data.installedPackages) {
-        setInstalledPackages(data.installedPackages)
-      }
       setOutput(`Successfully uninstalled ${packageName}`)
+      await fetchInstalledPackages()
     } catch (error) {
       setOutput(`Error uninstalling package: ${error instanceof Error ? error.message : String(error)}`)
     }
@@ -587,17 +627,40 @@ export default function Home() {
               </div>
 
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {installedPackages.length === 0 ? (
+                {isLoadingPackages ? (
+                  <div className="text-center py-4">
+                    <svg className="animate-spin h-6 w-6 mx-auto" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <p className="text-gray-400 mt-2">Loading packages...</p>
+                  </div>
+                ) : installedPackages.length === 0 ? (
                   <p className="text-gray-400 text-center py-4">No packages installed</p>
                 ) : (
                   installedPackages.map(pkg => (
                     <div
-                      key={pkg}
+                      key={pkg.name}
                       className="flex items-center justify-between bg-gray-800 p-2 rounded"
                     >
-                      <span className="text-sm">{pkg}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{pkg.name}</span>
+                        <span className="text-xs text-gray-400">{pkg.version}</span>
+                      </div>
                       <button
-                        onClick={() => handleUninstallPackage(pkg)}
+                        onClick={() => handleUninstallPackage(pkg.name)}
                         className="text-red-400 hover:text-red-300 focus:outline-none px-2 py-1 hover:bg-gray-700 rounded"
                         title="Uninstall package"
                       >
