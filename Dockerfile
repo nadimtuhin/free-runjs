@@ -9,8 +9,9 @@ RUN npm ci
 # Copy source files
 COPY . .
 
-# Build the application
-RUN npm run build
+# Create required directories
+RUN mkdir -p public temp && \
+    npm run build
 
 # Production image
 FROM node:20-alpine AS runner
@@ -19,11 +20,15 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=30000
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
+
+# Create required directories
+RUN mkdir -p public .next/static temp && \
+    chown -R nextjs:nodejs /app
 
 # Copy only necessary files
 COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
@@ -34,6 +39,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/temp ./temp
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 30000
 
 CMD ["node", "server.js"]
