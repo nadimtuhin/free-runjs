@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { code, moduleType = 'esm' } = await request.json() as { code: string; moduleType?: 'esm' | 'commonjs' };
 

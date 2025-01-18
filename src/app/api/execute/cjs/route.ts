@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, mkdir, readFile, access } from 'fs/promises';
@@ -225,7 +225,7 @@ async function executeCode(code: string): Promise<string> {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   // Clear previous logs
   debugLogs.length = 0;
 

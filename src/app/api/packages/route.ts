@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -39,7 +39,7 @@ async function readPackagesFromDir(dir: string): Promise<{ name: string; version
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const packages = await getInstalledPackages();
     return NextResponse.json({ packages });
