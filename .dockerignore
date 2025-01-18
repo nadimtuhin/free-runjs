@@ -12,3 +12,9 @@ Dockerfile
 .editorconfig
 *.log
 temp
+scripts
+.DS_Store
+captain-definition
+.envrc
+build-local.sh
+caprover-deploy.sh

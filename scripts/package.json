@@ -1,0 +1,11 @@
+{
+  "name": "rate-limit-test",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "node-fetch": "^2.6.9"
+  },
+  "scripts": {
+    "test": "node test-rate-limit.js"
+  }
+}
