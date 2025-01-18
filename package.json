@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
+    "caprover-deploy": "./caprover-deploy.sh"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",

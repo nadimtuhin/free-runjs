@@ -72,7 +72,6 @@ function EditorContent() {
   const [originalName, setOriginalName] = useState<string>('')
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
-  const [shareTooltip, setShareTooltip] = useState('Copy share URL')
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const shareInputRef = useRef<HTMLInputElement>(null)
   const [isCopied, setIsCopied] = useState(false)
@@ -131,16 +130,14 @@ function EditorContent() {
 
   // Load packages on initialization
   useEffect(() => {
-    if (hasInitialized.current) {
-      fetchInstalledPackages()
-    }
-  }, [hasInitialized.current])
+    if (!hasLoadedFromUrl.current) return
+    fetchInstalledPackages()
+  }, [])
 
   // Reload packages when active tab or module type changes
   useEffect(() => {
-    if (hasInitialized.current) {
-      fetchInstalledPackages()
-    }
+    if (!hasLoadedFromUrl.current) return
+    fetchInstalledPackages()
   }, [activeTabId, activeTab?.moduleType])
 
   // Persist tabs and active tab to localStorage
@@ -567,9 +564,8 @@ function EditorContent() {
               )}
             </button>
             <button
-              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 ml-2"
               onClick={handleShare}
-              title={shareTooltip}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 ml-2"
             >
               Share
             </button>
