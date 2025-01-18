@@ -1,0 +1,12 @@
+{
+  "TaskTemplate": {
+    "ContainerSpec": {
+      "Isolation": "default"
+    },
+    "Networks": [],
+    "RestartPolicy": {
+      "Condition": "any"
+    }
+  },
+  "Networks": []
+}
