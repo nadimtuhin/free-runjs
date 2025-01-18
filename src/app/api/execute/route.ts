@@ -4,13 +4,21 @@ import { POST as postCjs } from './cjs/route';
 
 export async function POST(request: NextRequest) {
   try {
-    const { moduleType = 'esm' } = await request.json() as { code: string; moduleType?: 'esm' | 'commonjs' };
+    const body = await request.json();
+    const { moduleType = 'esm' } = body as { code: string; moduleType?: 'esm' | 'commonjs' };
+
+    // Create a new request with the same body
+    const clonedRequest = new NextRequest(request.url, {
+      method: request.method,
+      headers: request.headers,
+      body: JSON.stringify(body),
+    });
 
     // Directly call the appropriate handler
     if (moduleType === 'esm') {
-      return postMjs(request);
+      return postMjs(clonedRequest);
     } else {
-      return postCjs(request);
+      return postCjs(clonedRequest);
     }
   } catch (error) {
     return NextResponse.json(
