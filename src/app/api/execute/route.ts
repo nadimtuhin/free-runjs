@@ -4,7 +4,7 @@ import { POST as postCjs } from './cjs/route';
 
 export async function POST(request: NextRequest) {
   try {
-    const { code, moduleType = 'esm' } = await request.json() as { code: string; moduleType?: 'esm' | 'commonjs' };
+    const { moduleType = 'esm' } = await request.json() as { code: string; moduleType?: 'esm' | 'commonjs' };
 
     // Directly call the appropriate handler
     if (moduleType === 'esm') {
