@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import Editor, { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { generateUUID } from './utils/uuid'
 
 type ModuleType = 'esm' | 'commonjs'
 
@@ -25,7 +26,7 @@ const defaultCode = {
 }
 
 const createNewTab = (moduleType: ModuleType): EditorTab => ({
-  id: crypto.randomUUID(),
+  id: generateUUID(),
   name: 'Untitled',
   code: defaultCode[moduleType],
   moduleType,
@@ -108,7 +109,7 @@ function EditorContent() {
         }
 
         setTabs([{
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           name: 'Shared Code',
           code: decodedCode,
           moduleType
