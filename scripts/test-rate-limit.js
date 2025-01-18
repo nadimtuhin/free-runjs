@@ -2,6 +2,7 @@ const fetch = require('node-fetch');
 
 // Configuration
 const API_URL = 'http://localhost:3000/api/execute';
+// const API_URL = 'https://runjs.app.nadimtuhin.com/api/execute';
 const TOTAL_REQUESTS = 1000;
 const CONCURRENT_REQUESTS = 10;
 const DELAY_BETWEEN_BATCHES = 100; // ms

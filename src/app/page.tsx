@@ -72,6 +72,10 @@ function EditorContent() {
   const [originalName, setOriginalName] = useState<string>('')
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
+  const [shareTooltip, setShareTooltip] = useState('Copy share URL')
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const shareInputRef = useRef<HTMLInputElement>(null)
+  const [isCopied, setIsCopied] = useState(false)
 
   // Handle all client-side initialization in one effect
   useEffect(() => {
@@ -385,6 +389,26 @@ function EditorContent() {
     }
   }
 
+  const handleShare = () => {
+    setIsShareModalOpen(true)
+    // Focus and select the input in the next tick after modal is rendered
+    setTimeout(() => {
+      if (shareInputRef.current) {
+        shareInputRef.current.select()
+      }
+    }, 0)
+  }
+
+  const handleCopyShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy URL:', error)
+    }
+  }
+
   return (
     <main className="flex min-h-screen">
       {/* Sidebar */}
@@ -542,6 +566,13 @@ function EditorContent() {
                 'Run'
               )}
             </button>
+            <button
+              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 ml-2"
+              onClick={handleShare}
+              title={shareTooltip}
+            >
+              Share
+            </button>
           </div>
         </nav>
 
@@ -674,6 +705,45 @@ function EditorContent() {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {isShareModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h2 className="text-xl font-semibold text-white">Share Code</h2>
+              <button
+                onClick={() => setIsShareModalOpen(false)}
+                className="text-gray-400 hover:text-white focus:outline-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={shareInputRef}
+                  type="text"
+                  value={window.location.href}
+                  readOnly
+                  className="flex-1 bg-gray-800 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopyShare}
+                    className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Copy
+                  </button>
+                  {isCopied && (
+                    <span className="text-green-500 text-sm">Copied!</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
