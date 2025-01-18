@@ -39,7 +39,7 @@ async function readPackagesFromDir(dir: string): Promise<{ name: string; version
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const packages = await getInstalledPackages();
     return NextResponse.json({ packages });
