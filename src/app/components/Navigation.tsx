@@ -24,12 +24,6 @@ export function Navigation({
   onEmbed,
   installedPackagesCount,
 }: NavigationProps) {
-  const [domainUrl, setDomainUrl] = useState('')
-
-  useEffect(() => {
-    setDomainUrl(`${window.location.protocol}//${window.location.host}`)
-  }, [])
-
   return (
     <nav className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-4">

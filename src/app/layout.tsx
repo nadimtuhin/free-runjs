@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Analytics } from './components/Analytics'
 
 export const metadata: Metadata = {
   title: 'RunJS - JavaScript Playground',
@@ -71,14 +72,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script defer data-domain="nadimtuhin.com" src="http://null.app.nadimtuhin.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"></script>
-        <script>
-          if (typeof window !== "undefined") {
-            /* @ts-expect-error */ /* eslint-disable-next-line prefer-rest-params */
-            window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
-          }
-        </script>
       </head>
       <body className="bg-secondary min-h-screen">
+        <Analytics />
         {children}
         <Footer />
       </body>

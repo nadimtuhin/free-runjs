@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { APP_CONFIG } from '../config/app'
 
 interface ShareModalProps {
   isOpen: boolean
@@ -9,13 +10,21 @@ interface ShareModalProps {
 
 export function ShareModal({ isOpen, onClose }: ShareModalProps) {
   const [isCopied, setIsCopied] = useState(false)
+  const [url, setUrl] = useState('')
   const shareInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname + window.location.search + window.location.hash
+      setUrl(APP_CONFIG.contact.website + path)
+    }
+  }, [])
 
   if (!isOpen) return null
 
   const handleCopyShare = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href)
+      await navigator.clipboard.writeText(url)
       setIsCopied(true)
       setTimeout(() => setIsCopied(false), 2000)
     } catch (error) {
@@ -40,7 +49,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             <input
               ref={shareInputRef}
               type="text"
-              value={window.location.href}
+              value={url}
               readOnly
               className="flex-1 bg-gray-800 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
             />

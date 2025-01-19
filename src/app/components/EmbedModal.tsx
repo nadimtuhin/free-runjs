@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { APP_CONFIG } from '../config/app'
 
 interface EmbedModalProps {
   isOpen: boolean
@@ -15,7 +16,7 @@ export function EmbedModal({ isOpen, onClose, code, moduleType }: EmbedModalProp
 
   if (!isOpen) return null
 
-  const embedCode = `<iframe src="${window.location.origin}/embed?code=${btoa(code)}&moduleType=${moduleType}" width="100%" height="600" frameborder="0"></iframe>`
+  const embedCode = `<iframe src="${APP_CONFIG.contact.website}/embed?code=${btoa(code)}&moduleType=${moduleType}" width="100%" height="600" frameborder="0"></iframe>`
 
   const handleCopyEmbed = async () => {
     try {
@@ -63,7 +64,7 @@ export function EmbedModal({ isOpen, onClose, code, moduleType }: EmbedModalProp
               <h3 className="text-lg font-semibold mb-2">Preview</h3>
               <div className="border border-gray-700 rounded overflow-hidden">
                 <iframe
-                  src={`${window.location.origin}/embed?code=${btoa(code)}&moduleType=${moduleType}`}
+                  src={`${APP_CONFIG.contact.website}/embed?code=${btoa(code)}&moduleType=${moduleType}`}
                   width="100%"
                   height="500"
                   frameBorder="0"

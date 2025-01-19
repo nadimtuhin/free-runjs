@@ -6,6 +6,7 @@ import type { editor } from 'monaco-editor'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { ModuleType, defaultCode } from '../utils/moduleTypes'
+import { APP_CONFIG } from '../config/app'
 
 function EmbedPageContent() {
   const searchParams = useSearchParams()
@@ -41,9 +42,7 @@ function EmbedPageContent() {
   const getEmbedCode = () => {
     const currentCode = editorRef.current?.getValue() || code
     const encodedCode = btoa(currentCode)
-    const currentUrl = new URL(window.location.href)
-    const url = `${currentUrl.protocol}//${currentUrl.host}/embed?moduleType=${moduleType}&code=${encodedCode}`
-    return `<iframe src="${url}" width="100%" height="600" frameborder="0"></iframe>`
+    return `<iframe src="${APP_CONFIG.contact.website}/embed?moduleType=${moduleType}&code=${encodedCode}" width="100%" height="600" frameborder="0"></iframe>`
   }
 
   const copyEmbedCode = async () => {
