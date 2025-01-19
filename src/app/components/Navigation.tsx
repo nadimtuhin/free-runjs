@@ -4,6 +4,7 @@ import { ModuleType } from '../utils/moduleTypes'
 import { FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import { FaFacebook } from 'react-icons/fa'
+import { useState, useEffect } from 'react'
 
 interface NavigationProps {
   activeModuleType: ModuleType
@@ -22,6 +23,12 @@ export function Navigation({
   onEmbed,
   installedPackagesCount,
 }: NavigationProps) {
+  const [domainUrl, setDomainUrl] = useState('')
+
+  useEffect(() => {
+    setDomainUrl(`${window.location.protocol}//${window.location.host}`)
+  }, [])
+
   return (
     <nav className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-4">
@@ -29,7 +36,7 @@ export function Navigation({
         <div className="flex items-center gap-2 bg-gray-800 p-1 rounded">
           <button
             onClick={() => onModuleTypeChange('esm')}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 rounded cursor-pointer ${
               activeModuleType === 'esm'
                 ? 'bg-primary text-white'
                 : 'text-gray-300 hover:text-white'
@@ -39,7 +46,7 @@ export function Navigation({
           </button>
           <button
             onClick={() => onModuleTypeChange('commonjs')}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 rounded cursor-pointer ${
               activeModuleType === 'commonjs'
                 ? 'bg-primary text-white'
                 : 'text-gray-300 hover:text-white'
@@ -52,7 +59,7 @@ export function Navigation({
       <div className="flex items-center gap-4">
         <button
           onClick={onOpenPackages}
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
         >
           Packages ({installedPackagesCount})
         </button>
@@ -60,23 +67,23 @@ export function Navigation({
           href="https://github.com/nadimtuhin/free-runjs"
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
         >
           <FaGithub className="text-lg" />
         </a>
         <a
-          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=Check out this JavaScript playground!`}
+          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(domainUrl)}&text=Check out this JavaScript playground!`}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
         >
           <FaXTwitter className="text-lg" />
         </a>
         <a
-          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+          href={`https://www.facebook.com/dialog/share?app_id=184683071273&href=${encodeURIComponent(domainUrl)}&display=popup`}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
         >
           <FaFacebook className="text-lg" />
         </a>
@@ -84,25 +91,25 @@ export function Navigation({
           href="https://forms.gle/K5yuUtnSPxQSFmiE6"
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded cursor-pointer"
         >
           Feedback
         </a>
         <a
           href="/credits"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded cursor-pointer"
         >
           Credits
         </a>
         <button
           onClick={onShare}
-          className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
+          className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 cursor-pointer"
         >
           Share
         </button>
         <button
           onClick={onEmbed}
-          className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
+          className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 cursor-pointer"
         >
           Embed
         </button>
