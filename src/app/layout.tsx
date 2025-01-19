@@ -69,6 +69,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script defer data-domain="nadimtuhin.com" src="http://null.app.nadimtuhin.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"></script>
+        <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+      </head>
       <body className="bg-secondary min-h-screen">
         {children}
         <Footer />
