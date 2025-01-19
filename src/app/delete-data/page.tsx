@@ -13,7 +13,7 @@ export default function DeleteData() {
         <h2 className="text-xl font-semibold mt-6 mb-3">How to Request Data Deletion</h2>
         <ol className="list-decimal pl-6 mb-6">
           <li className="mb-2">Send an email to <a href="mailto:support@runjs.app" className="text-blue-600 hover:underline">support@runjs.app</a></li>
-          <li className="mb-2">Include "Data Deletion Request" in the subject line</li>
+          <li className="mb-2">Include &ldquo;Data Deletion Request&rdquo; in the subject line</li>
           <li className="mb-2">Provide the email address associated with your RunJS account</li>
           <li className="mb-2">We will process your request within 30 days and send you a confirmation email</li>
         </ol>
