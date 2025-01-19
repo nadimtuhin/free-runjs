@@ -14,4 +14,11 @@ export const APP_CONFIG = {
   sharing: {
     defaultText: 'Check out this awesome JavaScript playground!',
   },
+  analytics: {
+    plausible: {
+      enabled: true,
+      domain: 'runjs.app.nadimtuhin.com',
+      scriptSrc: 'https://null.app.nadimtuhin.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js',
+    },
+  },
 } as const
