@@ -38,3 +38,10 @@ next-env.d.ts
 # temp directory contents
 temp/*
 !temp/.gitkeep
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
