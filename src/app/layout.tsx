@@ -71,7 +71,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script defer data-domain="nadimtuhin.com" src="http://null.app.nadimtuhin.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"></script>
+        <script defer data-domain="nadimtuhin.com" src="https://null.app.nadimtuhin.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"></script>
       </head>
       <body className="bg-secondary min-h-screen">
         <Analytics />
