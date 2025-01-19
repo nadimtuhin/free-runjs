@@ -4,14 +4,19 @@ import { useEffect } from 'react'
 
 declare global {
   interface Window {
-    plausible: (...args: any[]) => void
+    plausible: {
+      (...args: any[]): void
+      q?: any[]
+    }
   }
 }
 
 export function Analytics() {
   useEffect(() => {
-    window.plausible = window.plausible || function() {
-      (window.plausible.q = window.plausible.q || []).push(arguments)
+    if (typeof window !== 'undefined') {
+      window.plausible = window.plausible || function(...args) {
+        (window.plausible.q = window.plausible.q || []).push(args)
+      }
     }
   }, [])
 
