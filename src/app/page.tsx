@@ -12,7 +12,9 @@ import { Output } from './components/Output'
 import { PackagesModal } from './components/PackagesModal'
 import { ShareModal } from './components/ShareModal'
 import { EmbedModal } from './components/EmbedModal'
+import { LoveModal } from './components/LoveModal'
 import { defaultCode } from './utils/moduleTypes'
+import { MODAL_CONFIG } from './config/modals'
 
 type PackageInfo = {
   name: string
@@ -38,6 +40,8 @@ function EditorContent() {
   const [isRunning, setIsRunning] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false)
+  const [isLoveModalOpen, setIsLoveModalOpen] = useState(false)
+  const loveModalTimeout = useRef<NodeJS.Timeout>()
 
   // Handle all client-side initialization in one effect
   useEffect(() => {
@@ -134,6 +138,23 @@ function EditorContent() {
       setActiveTabId(tabs[0].id)
     }
   }, [tabs, activeTabId])
+
+  // Add effect to show love modal after delay
+  useEffect(() => {
+    const hasShownBefore = localStorage.getItem(MODAL_CONFIG.love.storageKey)
+    if (!hasShownBefore) {
+      loveModalTimeout.current = setTimeout(() => {
+        setIsLoveModalOpen(true)
+        localStorage.setItem(MODAL_CONFIG.love.storageKey, 'true')
+      }, MODAL_CONFIG.love.showDelay)
+    }
+
+    return () => {
+      if (loveModalTimeout.current) {
+        clearTimeout(loveModalTimeout.current)
+      }
+    }
+  }, [])
 
   const handleRunCode = async () => {
     if (isRunning || !activeTab) return
@@ -350,6 +371,8 @@ function EditorContent() {
           moduleType={activeTab.moduleType}
         />
       )}
+
+      <LoveModal isOpen={isLoveModalOpen} onClose={() => setIsLoveModalOpen(false)} />
     </main>
   )
 }
