@@ -7,7 +7,7 @@ import { APP_CONFIG } from './config/app'
 export const metadata: Metadata = {
   title: 'RunJS - JavaScript Playground',
   description: 'Write and execute JavaScript code with different Node.js versions',
-  metadataBase: new URL('https://runjs.app.nadimtuhin.com'),
+  metadataBase: new URL(APP_CONFIG.domains.baseUrl),
   icons: {
     icon: [
       { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },

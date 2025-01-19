@@ -1,6 +1,15 @@
 const isDev = process.env.NODE_ENV === 'development'
 
+const DOMAIN = isDev ? 'localhost:3000' : 'runjs.app.nadimtuhin.com'
+const PROTOCOL = isDev ? 'http' : 'https'
+const BASE_URL = `${PROTOCOL}://${DOMAIN}`
+
 export const APP_CONFIG = {
+  domains: {
+    main: DOMAIN,
+    baseUrl: BASE_URL,
+    analytics: 'null.app.nadimtuhin.com',
+  },
   social: {
     facebookAppId: '1148490690216280',
     githubRepo: 'https://github.com/nadimtuhin/free-runjs',
@@ -9,7 +18,7 @@ export const APP_CONFIG = {
   },
   contact: {
     email: 'nadimtuhin@gmail.com', // You might want to update this with the correct email
-    website: isDev ? 'http://localhost:3000' : 'https://runjs.app.nadimtuhin.com', // You might want to update this with the correct website
+    website: BASE_URL, // You might want to update this with the correct website
   },
   sharing: {
     defaultText: 'Check out this awesome JavaScript playground!',
@@ -17,8 +26,8 @@ export const APP_CONFIG = {
   analytics: {
     plausible: {
       enabled: true,
-      domain: 'runjs.app.nadimtuhin.com',
-      scriptSrc: 'https://null.app.nadimtuhin.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js',
+      domain: DOMAIN,
+      scriptSrc: `https://null.app.nadimtuhin.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js`,
     },
   },
 } as const
