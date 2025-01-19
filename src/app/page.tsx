@@ -12,15 +12,11 @@ import { Output } from './components/Output'
 import { PackagesModal } from './components/PackagesModal'
 import { ShareModal } from './components/ShareModal'
 import { EmbedModal } from './components/EmbedModal'
+import { defaultCode } from './utils/moduleTypes'
 
 type PackageInfo = {
   name: string
   version: string
-}
-
-const defaultCode = {
-  esm: '// Write your JavaScript code here using ES Modules\nimport axios from "axios";\nconsole.log("Hello World!");',
-  commonjs: '// Write your JavaScript code here using CommonJS\nconst axios = require("axios");\nconsole.log("Hello World!");'
 }
 
 function EditorContent() {
