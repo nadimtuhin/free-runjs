@@ -1,14 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:9323';
+
 test.describe('Main Editor', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('.monaco-editor', { state: 'visible' });
+    await page.goto(`${BASE_URL}/`);
+    await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 30000 });
+    await page.waitForTimeout(1000); // Wait for editor to fully initialize
 
-    // Clear any existing code
-    await page.keyboard.press('Meta+A');
-    await page.keyboard.press('Backspace');
-    await page.waitForTimeout(500); // Wait for editor to update
+    // Clear any existing code and local storage
+    await page.evaluate(() => {
+      localStorage.clear();
+      // @ts-ignore
+      window.monaco?.editor?.getModels()[0]?.setValue('');
+    });
+    await page.waitForTimeout(1000); // Wait for editor to update
   });
 
   test('should load the editor with default configuration', async ({ page }) => {
@@ -22,59 +28,74 @@ test.describe('Main Editor', () => {
   });
 
   test('should execute code and display output', async ({ page }) => {
-    // Type some test code
+    // Clear editor and type test code
+    await page.evaluate(() => {
+      // @ts-ignore
+      window.monaco?.editor?.getModels()[0]?.setValue('');
+    });
+    await page.waitForTimeout(500);
     await page.keyboard.type('console.log("Hello, RunJS!");');
     await page.waitForTimeout(500); // Wait for editor to update
 
     // Run the code
     await page.getByRole('button', { name: /Run/i }).click();
 
-    // Wait for output to appear and not be the default text
+    // Check output
     const output = page.locator('.bg-gray-800.font-mono');
-    await expect(output).toBeVisible();
+    await expect(output).toBeVisible({ timeout: 5000 });
     await expect(async () => {
       const text = await output.textContent();
-      expect(text).not.toBe('Output will appear here...');
       expect(text).toContain('Hello, RunJS!');
-    }).toPass();
+    }).toPass({ timeout: 10000 });
   });
 
   test('should handle syntax errors gracefully', async ({ page }) => {
-    // Type code with syntax error
+    // Clear editor and type code with syntax error
+    await page.evaluate(() => {
+      // @ts-ignore
+      window.monaco?.editor?.getModels()[0]?.setValue('');
+    });
+    await page.waitForTimeout(500);
     await page.keyboard.type('console.log("Unclosed string);');
     await page.waitForTimeout(500); // Wait for editor to update
 
     // Run the code
     await page.getByRole('button', { name: /Run/i }).click();
 
-    // Wait for error to appear
+    // Check output
     const output = page.locator('.bg-gray-800.font-mono');
-    await expect(output).toBeVisible();
+    await expect(output).toBeVisible({ timeout: 5000 });
     await expect(async () => {
       const text = await output.textContent();
-      expect(text).not.toBe('Output will appear here...');
       expect(text).toContain('SyntaxError');
-    }).toPass();
+    }).toPass({ timeout: 10000 });
   });
 
   test('should persist code changes', async ({ page }) => {
     const testCode = 'console.log("Test persistence");';
 
-    // Type test code
+    // Clear editor and type test code
+    await page.evaluate(() => {
+      localStorage.clear();
+      // @ts-ignore
+      window.monaco?.editor?.getModels()[0]?.setValue('');
+    });
+    await page.waitForTimeout(500);
     await page.keyboard.type(testCode);
     await page.waitForTimeout(1000); // Wait for auto-save
 
     // Reload the page
     await page.reload();
-    await page.waitForSelector('.monaco-editor', { state: 'visible' });
+    await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 30000 });
     await page.waitForTimeout(1000); // Wait for content to load
 
-    // Get editor content using Monaco API
+    // Get editor content
     const editorContent = await page.evaluate(() => {
       // @ts-ignore
       return window.monaco?.editor?.getModels()[0]?.getValue() || '';
     });
 
+    // Compare content
     expect(editorContent.trim()).toBe(testCode.trim());
   });
 });

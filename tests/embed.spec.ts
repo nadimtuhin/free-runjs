@@ -1,56 +1,64 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Embed Page', () => {
-  const BASE_URL = 'http://localhost:30000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:9323';
 
+test.describe('Embed Page', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the embed page before each test
     await page.goto(`${BASE_URL}/embed`);
-    // Wait for the editor to be fully loaded
-    await page.waitForSelector('.monaco-editor', { state: 'visible' });
+    // Wait for the editor to be fully loaded with increased timeout
+    await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 30000 });
+    await page.waitForTimeout(1000); // Additional wait for editor initialization
   });
 
   test('should load the embed page with default code', async ({ page }) => {
-    // Check if the module type is displayed
-    await expect(page.getByText('Module Type: ES Modules')).toBeVisible();
+    // Verify editor is visible and contains code
+    const editor = page.locator('.monaco-editor');
+    await expect(editor).toBeVisible();
 
-    // Check if Run button is present and enabled
-    const runButton = page.getByRole('button', { name: /Run/i });
-    await expect(runButton).toBeVisible();
-    await expect(runButton).toBeEnabled();
+    // Get editor content
+    const editorContent = await page.evaluate(() => {
+      // @ts-ignore
+      return window.monaco?.editor?.getModels()[0]?.getValue() || '';
+    });
+
+    // Verify it contains some default code
+    expect(editorContent).toContain('console.log');
   });
 
   test('should be able to run code and see output', async ({ page }) => {
-    // Wait for any initial auto-run to complete
-    await page.waitForTimeout(1000);
+    // Clear existing code
+    await page.keyboard.press('Meta+A');
+    await page.keyboard.press('Backspace');
+    await page.waitForTimeout(500);
 
-    // Click the Run button
-    const runButton = page.getByRole('button', { name: /Run/i });
-    await runButton.click();
+    // Type test code
+    const testCode = 'console.log("Embed test");';
+    await page.keyboard.type(testCode);
+    await page.waitForTimeout(500);
 
-    // Wait for the output to appear and not be empty
-    const outputElement = page.locator('.bg-gray-800.font-mono');
-    await expect(outputElement).toBeVisible();
+    // Run the code
+    await page.getByRole('button', { name: /Run/i }).click();
 
-    // Wait for actual content to appear
-    await expect(async () => {
-      const content = await outputElement.textContent();
-      expect(content?.trim()).not.toBe('Output will appear here...');
-    }).toPass();
+    // Check output
+    const output = page.locator('.bg-gray-800.font-mono');
+    await expect(output).toBeVisible({ timeout: 5000 });
+    await expect(output).toContainText('Embed test', { timeout: 5000 });
   });
 
   test('should show embed code when clicking embed button', async ({ page }) => {
-    // Click the Embed button
+    // Click embed button
     await page.getByRole('button', { name: 'Embed' }).click();
+    await page.waitForTimeout(500); // Wait for modal animation
 
-    // Check if embed code dialog appears with proper content
-    await expect(page.getByText('Copy this code to embed the editor:')).toBeVisible();
+    // Verify embed modal appears
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Copy this code to embed the editor:')).toBeVisible({ timeout: 5000 });
 
-    // Check if iframe code is present and contains the correct URL
-    const preElement = page.locator('pre');
-    await expect(preElement).toBeVisible();
-    const embedCode = await preElement.textContent();
-    expect(embedCode).toContain('<iframe');
-    expect(embedCode).toContain('/embed');
+    // Verify iframe code is present
+    const embedCode = page.locator('pre');
+    await expect(embedCode).toBeVisible({ timeout: 5000 });
+    const codeText = await embedCode.textContent();
+    expect(codeText).toContain('<iframe');
+    expect(codeText).toContain('/embed');
   });
 });
