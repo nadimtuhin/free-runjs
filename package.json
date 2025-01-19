@@ -7,11 +7,12 @@
     "postinstall": "mkdir -p temp/cjs temp/esm && cd temp/cjs && npm init -y && cd ../esm && npm init -y && npm pkg set type=module",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npm run cleanup-packages && next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
-    "caprover-deploy": "./caprover-deploy.sh"
+    "caprover-deploy": "./caprover-deploy.sh",
+    "cleanup-packages": "node scripts/cleanup-packages.js"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",

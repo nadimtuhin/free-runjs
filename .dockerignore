@@ -12,7 +12,6 @@ Dockerfile
 .editorconfig
 *.log
 temp
-scripts
 .DS_Store
 captain-definition
 .envrc

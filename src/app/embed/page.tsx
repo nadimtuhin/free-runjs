@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Editor, { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
 type ModuleType = 'esm' | 'commonjs'
 
@@ -12,7 +13,7 @@ const defaultCode = {
   commonjs: '// Write your JavaScript code here using CommonJS\nconst axios = require("axios");\nconsole.log("Hello World!");'
 }
 
-export default function EmbedPage() {
+function EmbedPageContent() {
   const searchParams = useSearchParams()
   const urlModuleType = searchParams.get('moduleType') as ModuleType | null
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
@@ -172,5 +173,13 @@ export default function EmbedPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function EmbedPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EmbedPageContent />
+    </Suspense>
   )
 }
