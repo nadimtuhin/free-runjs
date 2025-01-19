@@ -183,6 +183,8 @@ function EditorContent() {
       2048 | 3,
       () => handleRunCode()
     )
+    // Run code automatically when editor loads
+    handleRunCode()
   }
 
   const convertCode = (code: string, fromType: ModuleType, toType: ModuleType): string => {

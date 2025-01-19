@@ -38,6 +38,8 @@ export default function EmbedPage() {
       2048 | 3,
       () => handleRunCode()
     )
+    // Run code automatically when editor loads
+    handleRunCode()
   }
 
   const handleRunCode = async () => {
