@@ -540,8 +540,25 @@ function EditorContent() {
               Credits
             </a>
             <button
+              onClick={handleShare}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
+            >
+              Share
+            </button>
+            <button
+              onClick={() => setIsEmbedModalOpen(true)}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
+            >
+              Embed
+            </button>
+          </div>
+        </nav>
+
+        <div className="flex flex-1 gap-4">
+          <div className="flex-1 min-h-[500px] relative">
+            <button
               onClick={handleRunCode}
-              className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute top-2 right-2 z-10 bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg opacity-75 hover:opacity-100 hover:font-bold transition-all"
               disabled={isRunning}
             >
               {isRunning ? (
@@ -568,23 +585,6 @@ function EditorContent() {
                 'Run'
               )}
             </button>
-            <button
-              onClick={handleShare}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
-            >
-              Share
-            </button>
-            <button
-              onClick={() => setIsEmbedModalOpen(true)}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
-            >
-              Embed
-            </button>
-          </div>
-        </nav>
-
-        <div className="flex flex-1 gap-4">
-          <div className="flex-1 min-h-[500px]">
             {activeTab && (
               <Editor
                 height="100%"

@@ -92,30 +92,33 @@ function EmbedPageContent() {
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-400">Module Type: {moduleType === 'esm' ? 'ES Modules' : 'CommonJS'}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowEmbed(!showEmbed)}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm"
-          >
-            Embed
-          </button>
-          {showEmbed && (
-            <div className="absolute right-0 top-12 bg-gray-800 p-4 rounded shadow-lg border border-gray-700">
-              <p className="text-sm text-gray-300 mb-2">Copy this code to embed the editor:</p>
-              <pre className="bg-gray-900 p-2 rounded text-sm mb-2 max-w-lg overflow-x-auto">
-                {getEmbedCode()}
-              </pre>
-              <button
-                onClick={copyEmbedCode}
-                className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded text-sm w-full"
-              >
-                Copy Code
-              </button>
-            </div>
-          )}
+        <button
+          onClick={() => setShowEmbed(!showEmbed)}
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm"
+        >
+          Embed
+        </button>
+        {showEmbed && (
+          <div className="absolute right-0 top-12 bg-gray-800 p-4 rounded shadow-lg border border-gray-700">
+            <p className="text-sm text-gray-300 mb-2">Copy this code to embed the editor:</p>
+            <pre className="bg-gray-900 p-2 rounded text-sm mb-2 max-w-lg overflow-x-auto">
+              {getEmbedCode()}
+            </pre>
+            <button
+              onClick={copyEmbedCode}
+              className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded text-sm w-full"
+            >
+              Copy Code
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col md:flex-row">
+        <div className="flex-1 min-h-[300px] relative">
           <button
             onClick={handleRunCode}
-            className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="absolute top-2 right-2 z-10 bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg opacity-75 hover:opacity-100 hover:font-bold transition-all"
             disabled={isRunning}
           >
             {isRunning ? (
@@ -142,11 +145,6 @@ function EmbedPageContent() {
               'Run'
             )}
           </button>
-        </div>
-      </div>
-
-      <div className="flex flex-1 flex-col md:flex-row">
-        <div className="flex-1 min-h-[300px]">
           <Editor
             height="100%"
             defaultLanguage="javascript"
