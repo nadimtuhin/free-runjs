@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import '../globals.css'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'RunJS - Embedded Editor',
@@ -13,7 +14,15 @@ export default function EmbedLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-gray-900 text-white">{children}</body>
+      <body className="bg-gray-900 text-white">
+        <header className="border-b border-gray-800 px-4 py-2">
+          <Link href="/" className="text-lg font-semibold hover:text-gray-300 flex items-center gap-2">
+            <span className="text-yellow-500">Run</span>
+            <span>JS</span>
+          </Link>
+        </header>
+        {children}
+      </body>
     </html>
   )
 }
