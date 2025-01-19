@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Node.js Modules - Interactive Tutorial</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+            color: #222;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin: 1.5em 0 0.5em;
+            color: #333;
+        }
+        p {
+            margin-bottom: 1.2em;
+            font-size: 1.1em;
+        }
+        pre {
+            background: #f6f8fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.9em;
+            background: #f6f8fa;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .editor-container {
+            margin: 2em 0;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin: 2em 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .author-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 20px;
+        }
+        .author-details {
+            flex: 1;
+        }
+        .author-name {
+            font-weight: bold;
+            margin: 0;
+        }
+        .publish-date {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h1>Understanding Node.js Modules: CommonJS vs ES Modules</h1>
+
+        <div class="author-info">
+            <img src="https://github.com/identicons/user.png" alt="Author Avatar" class="author-avatar">
+            <div class="author-details">
+                <p class="author-name">John Developer</p>
+                <p class="publish-date">Published on March 14, 2024</p>
+                <p>Senior Node.js Developer & Technical Writer</p>
+            </div>
+        </div>
+
+        <p>Node.js supports two module systems: CommonJS (the traditional approach) and ES Modules (the newer standard). In this interactive tutorial, we'll explore both systems and understand their differences.</p>
+
+        <h2>1. CommonJS Modules</h2>
+        <p>CommonJS is the original module system in Node.js. It uses <code>require()</code> for importing and <code>module.exports</code> or <code>exports</code> for exporting.</p>
+
+        <p>Try this example of CommonJS modules (click "Run" to execute):</p>
+        <div class="editor-container">
+            <iframe src="/embed?moduleType=commonjs&code=Ly8gRGVmaW5pbmcgYSBzaW1wbGUgbWF0aCB1dGlsaXR5IGluIENvbW1vbkpTCmNvbnN0IGFkZCA9IChhLCBiKSA9PiBhICsgYjsKY29uc3QgbXVsdGlwbHkgPSAoYSwgYikgPT4gYSAqIGI7Cgptb2R1bGUuZXhwb3J0cyA9IHsKICBhZGQsCiAgbXVsdGlwbHkKfTsKCi8vIFVzaW5nIHRoZSBleHBvcnRlZCBmdW5jdGlvbnMKY29uc3QgbWF0aFV0aWxzID0gbW9kdWxlLmV4cG9ydHM7CmNvbnNvbGUubG9nKCdBZGQ6JywgbWF0aFV0aWxzLmFkZCg1LCAzKSk7CmNvbnNvbGUubG9nKCdNdWx0aXBseTonLCBtYXRoVXRpbHMubXVsdGlwbHkoNSwgMykpOw==" width="100%" height="400" frameborder="0"></iframe>
+        </div>
+
+        <h2>2. ES Modules</h2>
+        <p>ES Modules is the official standard for JavaScript modules. It uses <code>import</code> and <code>export</code> statements and provides a more structured approach to modules.</p>
+
+        <p>Here's the same example using ES Modules:</p>
+        <div class="editor-container">
+            <iframe src="/embed?moduleType=esm&code=Ly8gRGVmaW5pbmcgYSBzaW1wbGUgbWF0aCB1dGlsaXR5IGluIEVTIE1vZHVsZXMKZXhwb3J0IGNvbnN0IGFkZCA9IChhLCBiKSA9PiBhICsgYjsKZXhwb3J0IGNvbnN0IG11bHRpcGx5ID0gKGEsIGIpID0+IGEgKiBiOwoKLy8gVXNpbmcgdGhlIGV4cG9ydGVkIGZ1bmN0aW9ucwppbXBvcnQgeyBhZGQsIG11bHRpcGx5IH0gZnJvbSAnLi9tYXRoVXRpbHMnOwpjb25zb2xlLmxvZygnQWRkOicsIGFkZCg1LCAzKSk7CmNvbnNvbGUubG9nKCdNdWx0aXBseTonLCBtdWx0aXBseSg1LCAzKSk7" width="100%" height="400" frameborder="0"></iframe>
+        </div>
+
+        <h2>3. Working with External Packages</h2>
+        <p>Node.js makes it easy to work with external packages. Here's an example using the popular <code>axios</code> package to make HTTP requests:</p>
+
+        <div class="editor-container">
+            <iframe src="/embed?moduleType=esm&code=aW1wb3J0IGF4aW9zIGZyb20gJ2F4aW9zJzsKCi8vIE1ha2luZyBhIEdFVCByZXF1ZXN0IHRvIGEgcHVibGljIEFQSQpjb25zdCBmZXRjaFVzZXIgPSBhc3luYyAoKSA9PiB7CiAgdHJ5IHsKICAgIGNvbnN0IHJlc3BvbnNlID0gYXdhaXQgYXhpb3MuZ2V0KCdodHRwczovL2pzb25wbGFjZWhvbGRlci50eXBpY29kZS5jb20vdXNlcnMvMScpOwogICAgY29uc29sZS5sb2coJ1VzZXIgZGF0YTonLCByZXNwb25zZS5kYXRhKTsKICB9IGNhdGNoIChlcnJvcikgewogICAgY29uc29sZS5lcnJvcignRXJyb3IgZmV0Y2hpbmcgdXNlcjonLCBlcnJvci5tZXNzYWdlKTsKICB9Cn07CgpmZXRjaFVzZXIoKTs=" width="100%" height="400" frameborder="0"></iframe>
+        </div>
+
+        <h2>4. Error Handling</h2>
+        <p>Proper error handling is crucial in Node.js applications. Here's an example demonstrating error handling patterns:</p>
+
+        <div class="editor-container">
+            <iframe src="/embed?moduleType=commonjs&code=Ly8gRGVtb25zdHJhdGluZyBlcnJvciBoYW5kbGluZyBpbiBOb2RlLmpzCmNvbnN0IGRpdmlkZU51bWJlcnMgPSAoYSwgYikgPT4gewogIHJldHVybiBuZXcgUHJvbWlzZSgocmVzb2x2ZSwgcmVqZWN0KSA9PiB7CiAgICBpZiAoYiA9PT0gMCkgewogICAgICByZWplY3QobmV3IEVycm9yKCdDYW5ub3QgZGl2aWRlIGJ5IHplcm8nKSk7CiAgICB9IGVsc2UgewogICAgICByZXNvbHZlKGEgLyBiKTsKICAgIH0KICB9KTsKfTsKCmFzeW5jIGZ1bmN0aW9uIHRlc3REaXZpc2lvbigpIHsKICB0cnkgewogICAgY29uc3QgcmVzdWx0MSA9IGF3YWl0IGRpdmlkZU51bWJlcnMoMTAsIDIpOwogICAgY29uc29sZS5sb2coJ1Jlc3VsdCAxOicsIHJlc3VsdDEpOwoKICAgIGNvbnN0IHJlc3VsdDIgPSBhd2FpdCBkaXZpZGVOdW1iZXJzKDEwLCAwKTsKICAgIGNvbnNvbGUubG9nKCdSZXN1bHQgMjonLCByZXN1bHQyKTsgLy8gVGhpcyB3b24ndCBleGVjdXRlCiAgfSBjYXRjaCAoZXJyb3IpIHsKICAgIGNvbnNvbGUuZXJyb3IoJ0Vycm9yOicsIGVycm9yLm1lc3NhZ2UpOwogIH0KfQoKdGVzdERpdmlzaW9uKCk7" width="100%" height="400" frameborder="0"></iframe>
+        </div>
+
+        <h2>Conclusion</h2>
+        <p>Both CommonJS and ES Modules have their place in Node.js development. While CommonJS is still widely used in existing codebases, ES Modules represent the future of JavaScript modularity. The choice between them often depends on your project requirements, team preferences, and compatibility needs.</p>
+
+        <p>Feel free to experiment with the interactive examples above to better understand how modules work in Node.js. Try modifying the code and see the results in real-time!</p>
+    </article>
+</body>
+</html>

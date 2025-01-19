@@ -75,6 +75,9 @@ function EditorContent() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const shareInputRef = useRef<HTMLInputElement>(null)
   const [isCopied, setIsCopied] = useState(false)
+  const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false)
+  const embedInputRef = useRef<HTMLInputElement>(null)
+  const [isEmbedCopied, setIsEmbedCopied] = useState(false)
 
   // Handle all client-side initialization in one effect
   useEffect(() => {
@@ -565,9 +568,15 @@ function EditorContent() {
             </button>
             <button
               onClick={handleShare}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 ml-2"
+              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
             >
               Share
+            </button>
+            <button
+              onClick={() => setIsEmbedModalOpen(true)}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
+            >
+              Embed
             </button>
           </div>
         </nav>
@@ -739,6 +748,65 @@ function EditorContent() {
                   {isCopied && (
                     <span className="text-green-500 text-sm">Copied!</span>
                   )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Embed Modal */}
+      {isEmbedModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h2 className="text-xl font-semibold text-white">Embed Code</h2>
+              <button
+                onClick={() => setIsEmbedModalOpen(false)}
+                className="text-gray-400 hover:text-white focus:outline-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={embedInputRef}
+                    type="text"
+                    value={`<iframe src="${window.location.origin}/embed?code=${btoa(activeTab?.code || '')}&moduleType=${activeTab?.moduleType}" width="100%" height="600" frameborder="0"></iframe>`}
+                    readOnly
+                    className="flex-1 bg-gray-800 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(embedInputRef.current?.value || '')
+                        setIsEmbedCopied(true)
+                        setTimeout(() => setIsEmbedCopied(false), 2000)
+                      } catch (error) {
+                        console.error('Failed to copy embed code:', error)
+                      }
+                    }}
+                    className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Copy
+                  </button>
+                </div>
+                {isEmbedCopied && (
+                  <span className="text-green-500 text-sm">Copied!</span>
+                )}
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">Preview</h3>
+                  <div className="border border-gray-700 rounded">
+                    <iframe
+                      src={`/embed?code=${btoa(activeTab?.code || '')}&moduleType=${activeTab?.moduleType}`}
+                      width="100%"
+                      height="400"
+                      frameBorder="0"
+                      title="RunJS Embed Preview"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
