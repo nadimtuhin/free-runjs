@@ -2,6 +2,7 @@
 
 import { FaGithub, FaTwitter, FaFacebook } from 'react-icons/fa'
 import { useEffect, useCallback } from 'react'
+import { APP_CONFIG } from '../config/app'
 
 interface LoveModalProps {
   isOpen: boolean
@@ -26,8 +27,6 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
 
   if (!isOpen) return null
 
-  const domainUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : ''
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
@@ -49,7 +48,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
 
             <div className="flex flex-col gap-4">
               <a
-                href="https://github.com/nadimtuhin/free-runjs"
+                href={APP_CONFIG.social.githubRepo}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors"
@@ -59,7 +58,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
               </a>
 
               <a
-                href="https://github.com/nadimtuhin/free-runjs/issues"
+                href={APP_CONFIG.social.githubIssues}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors"
@@ -69,7 +68,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
               </a>
 
               <a
-                href="https://forms.gle/K5yuUtnSPxQSFmiE6"
+                href={APP_CONFIG.social.feedbackForm}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors"
@@ -79,7 +78,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
 
               <div className="flex gap-3">
                 <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(domainUrl)}&text=Check out this awesome JavaScript playground!`}
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(APP_CONFIG.contact.website)}&text=${encodeURIComponent(APP_CONFIG.sharing.defaultText)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors"
@@ -89,7 +88,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
                 </a>
 
                 <a
-                  href={`https://www.facebook.com/dialog/share?app_id=184683071273&href=${encodeURIComponent(domainUrl)}&display=popup`}
+                  href={`https://www.facebook.com/dialog/share?app_id=${APP_CONFIG.social.facebookAppId}&href=${encodeURIComponent(APP_CONFIG.contact.website)}&display=popup`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors"

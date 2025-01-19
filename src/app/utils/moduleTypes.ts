@@ -1,84 +1,64 @@
 export type ModuleType = 'esm' | 'commonjs'
 
 export const defaultCode = {
-  esm: `// Modern JavaScript using ES Modules
-import axios from 'axios';
+  esm: `// Modern JavaScript using ES Modules with Lodash
+import _ from 'lodash';
 
-// Utility function to format data
-const formatUserData = (user) => {
-  return {
-    name: user.name,
-    email: user.email,
-    company: user.company.name
-  };
-};
+// Sample data
+const users = [
+  { name: 'John', age: 25, active: true },
+  { name: 'Jane', age: 30, active: false },
+  { name: 'Bob', age: 28, active: true }
+];
 
-// Async function to fetch and process user data
-async function fetchUserData(userId) {
-  try {
-    const response = await axios.get(\`https://jsonplaceholder.typicode.com/users/\${userId}\`);
-    const formattedData = formatUserData(response.data);
-    console.log('User Data:', formattedData);
+// Using lodash to filter and transform data
+const activeUsers = _.chain(users)
+  .filter('active')
+  .map(user => ({
+    name: _.upperFirst(user.name),
+    age: user.age
+  }))
+  .value();
 
-    // Using modern JS features
-    const { name, email, company } = formattedData;
-    console.log(\`\${name} works at \${company}\`);
-    console.log(\`Contact: \${email}\`);
-  } catch (error) {
-    console.error('Error fetching user:', error.message);
-  }
-}
+console.log('Active Users:', activeUsers);
 
-// Execute the function (top-level await in ESM)
-await fetchUserData(1);`,
+// More lodash examples
+const numbers = [1, 2, 2, 3, 4, 4, 5];
+console.log('Unique numbers:', _.uniq(numbers));
+console.log('Average age:', _.meanBy(users, 'age'));
 
-  commonjs: `// Traditional Node.js using CommonJS
-const axios = require('axios');
+// Using lodash utilities
+const greeting = _.template('Hello <%= name %>!');
+console.log(greeting({ name: 'World' }));`,
 
-// Helper function to calculate time differences
-function timeAgo(date) {
-  const seconds = Math.floor((new Date() - date) / 1000);
-  const intervals = {
-    year: 31536000,
-    month: 2592000,
-    week: 604800,
-    day: 86400,
-    hour: 3600,
-    minute: 60
-  };
+  commonjs: `// Traditional Node.js using CommonJS with Lodash
+const _ = require('lodash');
 
-  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-    const interval = Math.floor(seconds / secondsInUnit);
-    if (interval >= 1) {
-      return interval === 1 ? \`1 \${unit} ago\` : \`\${interval} \${unit}s ago\`;
-    }
-  }
-  return 'just now';
-}
+// Sample collection
+const fruits = [
+  { name: 'apple', color: 'red', quantity: 5 },
+  { name: 'banana', color: 'yellow', quantity: 3 },
+  { name: 'orange', color: 'orange', quantity: 4 }
+];
 
-// Example usage with async/await
-async function displayPostInfo() {
-  try {
-    // Fetch a blog post
-    const response = await axios.get('https://jsonplaceholder.typicode.com/posts/1');
-    const post = response.data;
+// Group fruits by color
+const fruitsByColor = _.groupBy(fruits, 'color');
+console.log('Fruits grouped by color:', fruitsByColor);
 
-    // Get author details
-    const authorResponse = await axios.get(\`https://jsonplaceholder.typicode.com/users/\${post.userId}\`);
-    const author = authorResponse.data;
+// Sum up total quantity
+const totalFruits = _.sumBy(fruits, 'quantity');
+console.log('Total fruits:', totalFruits);
 
-    // Format and display the information
-    console.log('Post Title:', post.title);
-    console.log('Author:', author.name);
-    console.log('Posted:', timeAgo(new Date(Date.now() - 3600000))); // 1 hour ago
-    console.log(\`\\nExcerpt: \${post.body.slice(0, 100) + '...'}\`);
-  } catch (error) {
-    console.error('Error:', error.message);
-  }
-}
+// Transform the collection
+const fruitNames = _.map(fruits, fruit =>
+  _.startCase(fruit.name)
+);
+console.log('Formatted fruit names:', fruitNames);
 
-// Run the example
-displayPostInfo();`
+// Using lodash helper functions
+const numbers = _.range(1, 6);
+console.log('Random number from 1-5:', _.sample(numbers));
+console.log('Shuffled numbers:', _.shuffle(numbers));`
 }
 
 export const isValidModuleType = (type: any): type is ModuleType => {
