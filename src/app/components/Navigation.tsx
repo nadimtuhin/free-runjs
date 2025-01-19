@@ -1,6 +1,9 @@
 'use client'
 
 import { ModuleType } from '../utils/moduleTypes'
+import { FaGithub } from 'react-icons/fa'
+import { FaXTwitter } from 'react-icons/fa6'
+import { FaFacebook } from 'react-icons/fa'
 
 interface NavigationProps {
   activeModuleType: ModuleType
@@ -53,6 +56,38 @@ export function Navigation({
         >
           Packages ({installedPackagesCount})
         </button>
+        <a
+          href="https://github.com/nadimtuhin/free-runjs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+        >
+          <FaGithub className="text-lg" />
+        </a>
+        <a
+          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=Check out this JavaScript playground!`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+        >
+          <FaXTwitter className="text-lg" />
+        </a>
+        <a
+          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
+        >
+          <FaFacebook className="text-lg" />
+        </a>
+        <a
+          href="https://forms.gle/K5yuUtnSPxQSFmiE6"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded"
+        >
+          Feedback
+        </a>
         <a
           href="/credits"
           className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded"
