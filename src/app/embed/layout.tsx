@@ -14,8 +14,8 @@ export default function EmbedLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-gray-900 text-white">
-        <header className="border-b border-gray-800 px-4 py-2">
+      <body className="bg-gray-900 text-white min-h-screen">
+        <header className="border-b border-gray-800 px-2 py-1">
           <Link href="/" className="text-lg font-semibold hover:text-gray-300 flex items-center gap-2">
             <span className="text-yellow-500">Run</span>
             <span>JS</span>

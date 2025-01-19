@@ -87,19 +87,19 @@ function EmbedPageContent() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <div className="flex items-center justify-between p-2 bg-gray-900">
+    <main className="flex flex-col h-[calc(100vh-36px)]">
+      <div className="flex items-center justify-between p-1 bg-gray-900">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-400">Module Type: {moduleType === 'esm' ? 'ES Modules' : 'CommonJS'}</span>
         </div>
         <button
           onClick={() => setShowEmbed(!showEmbed)}
-          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm"
+          className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"
         >
           Embed
         </button>
         {showEmbed && (
-          <div className="absolute right-0 top-12 bg-gray-800 p-4 rounded shadow-lg border border-gray-700">
+          <div className="absolute right-0 top-8 bg-gray-800 p-4 rounded shadow-lg border border-gray-700 z-10">
             <p className="text-sm text-gray-300 mb-2">Copy this code to embed the editor:</p>
             <pre className="bg-gray-900 p-2 rounded text-sm mb-2 max-w-lg overflow-x-auto">
               {getEmbedCode()}
@@ -114,11 +114,11 @@ function EmbedPageContent() {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col md:flex-row">
-        <div className="flex-1 min-h-[300px] relative">
+      <div className="flex flex-1">
+        <div className="flex-1 relative">
           <button
             onClick={handleRunCode}
-            className="absolute top-2 right-2 z-10 bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg opacity-75 hover:opacity-100 hover:font-bold transition-all"
+            className="absolute top-2 right-2 z-10 bg-primary hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg opacity-75 hover:opacity-100 transition-all text-sm"
             disabled={isRunning}
           >
             {isRunning ? (
@@ -160,12 +160,13 @@ function EmbedPageContent() {
               lineNumbers: 'on',
               scrollBeyondLastLine: false,
               automaticLayout: true,
+              padding: { top: 8, bottom: 8 },
             }}
             onMount={handleEditorMount}
           />
         </div>
-        <div className="flex-1 border-t border-gray-700 md:border-t-0 md:border-l">
-          <div className="bg-gray-800 p-4 h-full font-mono whitespace-pre-wrap overflow-auto text-sm">
+        <div className="flex-1 border-l border-gray-700">
+          <div className="bg-gray-800 h-full font-mono whitespace-pre-wrap overflow-auto text-sm p-2">
             {output || 'Output will appear here...'}
           </div>
         </div>

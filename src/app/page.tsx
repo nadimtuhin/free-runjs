@@ -760,7 +760,7 @@ function EditorContent() {
       {/* Embed Modal */}
       {isEmbedModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
+          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-3xl">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <h2 className="text-xl font-semibold text-white">Embed Code</h2>
               <button
@@ -800,13 +800,15 @@ function EditorContent() {
                 )}
                 <div className="mt-4">
                   <h3 className="text-lg font-semibold mb-2">Preview</h3>
-                  <div className="border border-gray-700 rounded">
+                  <div className="border border-gray-700 rounded overflow-hidden">
                     <iframe
-                      src={`/embed?code=${btoa(activeTab?.code || '')}&moduleType=${activeTab?.moduleType}`}
+                      src={`${window.location.origin}/embed?code=${btoa(activeTab?.code || '')}&moduleType=${activeTab?.moduleType}`}
                       width="100%"
-                      height="400"
+                      height="500"
                       frameBorder="0"
                       title="RunJS Embed Preview"
+                      className="w-full"
+                      style={{ minHeight: '500px' }}
                     />
                   </div>
                 </div>
