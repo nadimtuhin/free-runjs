@@ -1,6 +1,6 @@
 export const MODAL_CONFIG = {
   love: {
-    showDelay: 60000, // 1 minute in milliseconds
+    showDelay: 30000, // 30 seconds in milliseconds
     storageKey: 'love-modal-shown'
   }
 } as const

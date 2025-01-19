@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Embed Page', () => {
-  const BASE_URL = 'http://localhost:3000';
+  const BASE_URL = 'http://localhost:30000';
 
   test.beforeEach(async ({ page }) => {
     // Navigate to the embed page before each test
