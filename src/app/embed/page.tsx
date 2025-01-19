@@ -5,13 +5,7 @@ import Editor, { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-
-type ModuleType = 'esm' | 'commonjs'
-
-const defaultCode = {
-  esm: '// Write your JavaScript code here using ES Modules\nimport axios from "axios";\nconsole.log("Hello World!");',
-  commonjs: '// Write your JavaScript code here using CommonJS\nconst axios = require("axios");\nconsole.log("Hello World!");'
-}
+import { ModuleType, defaultCode } from '../utils/moduleTypes'
 
 function EmbedPageContent() {
   const searchParams = useSearchParams()
