@@ -5,6 +5,26 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'RunJS - JavaScript Playground',
   description: 'Write and execute JavaScript code with different Node.js versions',
+  metadataBase: new URL('https://runjs.app.nadimtuhin.com'),
+  openGraph: {
+    title: 'RunJS - Node.js/JavaScript Playground',
+    description: 'Write and execute JavaScript code with different Node.js versions',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'RunJS - Node.js/JavaScript Playground',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RunJS - Node.js/JavaScript Playground',
+    description: 'Write and execute JavaScript code with different Node.js versions',
+    images: ['/og-image.png'],
+  },
 }
 
 function Footer() {
