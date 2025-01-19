@@ -12,7 +12,11 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "caprover-deploy": "./caprover-deploy.sh",
-    "cleanup-packages": "node scripts/cleanup-packages.js"
+    "cleanup-packages": "node scripts/cleanup-packages.js",
+    "test:chrome": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:all": "playwright test"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
