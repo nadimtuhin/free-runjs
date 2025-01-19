@@ -30,6 +30,7 @@ export default function EmbedPage() {
   const [moduleType] = useState<ModuleType>(urlModuleType || 'esm')
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
+  const [showEmbed, setShowEmbed] = useState(false)
 
   const handleEditorMount: OnMount = editor => {
     editorRef.current = editor
@@ -40,6 +41,20 @@ export default function EmbedPage() {
     )
     // Run code automatically when editor loads
     handleRunCode()
+  }
+
+  const getEmbedCode = () => {
+    const currentCode = editorRef.current?.getValue() || code
+    const encodedCode = btoa(currentCode)
+    const currentUrl = new URL(window.location.href)
+    const url = `${currentUrl.protocol}//${currentUrl.host}/embed?moduleType=${moduleType}&code=${encodedCode}`
+    return `<iframe src="${url}" width="100%" height="600" frameborder="0"></iframe>`
+  }
+
+  const copyEmbedCode = async () => {
+    const embedCode = getEmbedCode()
+    await navigator.clipboard.writeText(embedCode)
+    setShowEmbed(false)
   }
 
   const handleRunCode = async () => {
@@ -76,35 +91,57 @@ export default function EmbedPage() {
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-400">Module Type: {moduleType === 'esm' ? 'ES Modules' : 'CommonJS'}</span>
         </div>
-        <button
-          onClick={handleRunCode}
-          className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-          disabled={isRunning}
-        >
-          {isRunning ? (
-            <>
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Running...
-            </>
-          ) : (
-            'Run'
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowEmbed(!showEmbed)}
+            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm"
+          >
+            Embed
+          </button>
+          {showEmbed && (
+            <div className="absolute right-0 top-12 bg-gray-800 p-4 rounded shadow-lg border border-gray-700">
+              <p className="text-sm text-gray-300 mb-2">Copy this code to embed the editor:</p>
+              <pre className="bg-gray-900 p-2 rounded text-sm mb-2 max-w-lg overflow-x-auto">
+                {getEmbedCode()}
+              </pre>
+              <button
+                onClick={copyEmbedCode}
+                className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded text-sm w-full"
+              >
+                Copy Code
+              </button>
+            </div>
           )}
-        </button>
+          <button
+            onClick={handleRunCode}
+            className="bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            disabled={isRunning}
+          >
+            {isRunning ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Running...
+              </>
+            ) : (
+              'Run'
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col md:flex-row">
