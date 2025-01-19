@@ -1,12 +1,17 @@
 'use client'
 
 import { useState, useRef, useEffect, Suspense } from 'react'
-import Editor, { OnMount } from '@monaco-editor/react'
-import type { editor } from 'monaco-editor'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ModuleType, convertCode, isValidModuleType } from './utils/moduleTypes'
 import { EditorTab, createNewTab, isValidTab, isValidTabs } from './utils/tabs'
 import { generateUUID } from './utils/uuid'
+import { Sidebar } from './components/Sidebar'
+import { Navigation } from './components/Navigation'
+import { CodeEditor } from './components/CodeEditor'
+import { Output } from './components/Output'
+import { PackagesModal } from './components/PackagesModal'
+import { ShareModal } from './components/ShareModal'
+import { EmbedModal } from './components/EmbedModal'
 
 type PackageInfo = {
   name: string
@@ -27,23 +32,16 @@ function EditorContent() {
   const hasInitialized = useRef(false)
   const [tabs, setTabs] = useState<EditorTab[]>([createNewTab(urlModuleType || 'esm')])
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id)
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
   const [isPackagesModalOpen, setIsPackagesModalOpen] = useState(false)
   const [installedPackages, setInstalledPackages] = useState<PackageInfo[]>([])
   const [packageInput, setPackageInput] = useState('')
   const [isInstalling, setIsInstalling] = useState(false)
   const [isLoadingPackages, setIsLoadingPackages] = useState(false)
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
-  const activeTab = tabs.find(tab => tab.id === activeTabId)
-  const [editingTabId, setEditingTabId] = useState<string | null>(null)
-  const [originalName, setOriginalName] = useState<string>('')
   const [output, setOutput] = useState<string>('')
   const [isRunning, setIsRunning] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
-  const shareInputRef = useRef<HTMLInputElement>(null)
-  const [isCopied, setIsCopied] = useState(false)
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false)
-  const embedInputRef = useRef<HTMLInputElement>(null)
-  const [isEmbedCopied, setIsEmbedCopied] = useState(false)
 
   // Handle all client-side initialization in one effect
   useEffect(() => {
@@ -122,7 +120,6 @@ function EditorContent() {
 
   // Sync URL with active tab's module type and code
   useEffect(() => {
-    const activeTab = tabs.find(tab => tab.id === activeTabId)
     if (activeTab) {
       const params = new URLSearchParams(Array.from(searchParams.entries()))
       params.set('moduleType', activeTab.moduleType)
@@ -133,7 +130,7 @@ function EditorContent() {
 
       router.replace(`?${params.toString()}`)
     }
-  }, [activeTabId, tabs, urlModuleType, router, searchParams])
+  }, [activeTabId, tabs, urlModuleType, router, searchParams, activeTab])
 
   // Validate active tab exists
   useEffect(() => {
@@ -142,52 +139,17 @@ function EditorContent() {
     }
   }, [tabs, activeTabId])
 
-  const handleEditorMount: OnMount = editor => {
-    editorRef.current = editor
-    editor.addCommand(
-      // Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter
-      2048 | 3,
-      () => handleRunCode()
-    )
-    // Run code automatically when editor loads
-    handleRunCode()
-  }
-
-  const handleModuleTypeChange = (type: ModuleType) => {
-    const updatedTabs = tabs.map(tab => {
-      if (tab.id === activeTabId) {
-        // Only replace code if it's empty or matches the default code for current module type
-        const shouldReplaceCode = !tab.code.trim() || tab.code === defaultCode[tab.moduleType];
-        const newCode = shouldReplaceCode
-          ? defaultCode[type]
-          : convertCode(tab.code, tab.moduleType, type);
-
-        return {
-          ...tab,
-          moduleType: type,
-          code: newCode
-        };
-      }
-      return tab;
-    });
-    setTabs(updatedTabs);
-  }
-
   const handleRunCode = async () => {
-    if (isRunning) return
-
-    const activeTab = tabs.find(tab => tab.id === activeTabId)
-    if (!activeTab) return
+    if (isRunning || !activeTab) return
 
     setIsRunning(true)
     try {
-      const currentCode = editorRef.current?.getValue() || activeTab.code
       const response = await fetch('/api/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code: currentCode, moduleType: activeTab.moduleType }),
+        body: JSON.stringify({ code: activeTab.code, moduleType: activeTab.moduleType }),
       })
 
       const data = await response.json()
@@ -208,7 +170,6 @@ function EditorContent() {
   }
 
   const addNewTab = () => {
-    const activeTab = tabs.find(tab => tab.id === activeTabId)
     const newTab = createNewTab(activeTab?.moduleType || 'esm')
     setTabs([...tabs, newTab])
     setActiveTabId(newTab.id)
@@ -244,14 +205,6 @@ function EditorContent() {
     }
   }
 
-  // Fetch packages when modal opens
-  useEffect(() => {
-    if (isPackagesModalOpen) {
-      fetchInstalledPackages()
-    }
-  }, [isPackagesModalOpen])
-
-  // Update packages list after installation/uninstallation
   const handleInstallPackage = async () => {
     if (!packageInput.trim() || isInstalling) return
 
@@ -318,431 +271,88 @@ function EditorContent() {
     }
   }
 
-  const handleShare = () => {
-    setIsShareModalOpen(true)
-    // Focus and select the input in the next tick after modal is rendered
-    setTimeout(() => {
-      if (shareInputRef.current) {
-        shareInputRef.current.select()
-      }
-    }, 0)
-  }
+  const handleModuleTypeChange = (type: ModuleType) => {
+    const updatedTabs = tabs.map(tab => {
+      if (tab.id === activeTabId) {
+        // Only replace code if it's empty or matches the default code for current module type
+        const shouldReplaceCode = !tab.code.trim() || tab.code === defaultCode[tab.moduleType];
+        const newCode = shouldReplaceCode
+          ? defaultCode[type]
+          : convertCode(tab.code, tab.moduleType, type);
 
-  const handleCopyShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setIsCopied(true)
-      setTimeout(() => setIsCopied(false), 2000)
-    } catch (error) {
-      console.error('Failed to copy URL:', error)
-    }
+        return {
+          ...tab,
+          moduleType: type,
+          code: newCode
+        };
+      }
+      return tab;
+    });
+    setTabs(updatedTabs);
   }
 
   return (
     <main className="flex min-h-screen">
-      {/* Sidebar */}
-      <div
-        className={`bg-gray-900 transition-all duration-300 ${
-          isSidebarOpen ? 'w-64' : 'w-12'
-        } flex flex-col`}
-      >
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 hover:bg-gray-800 text-gray-400 hover:text-white"
-        >
-          {isSidebarOpen ? '◀' : '▶'}
-        </button>
-        {isSidebarOpen && (
-          <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4">Files</h2>
-            <div className="space-y-2">
-              {tabs.map(tab => (
-                <div
-                  key={tab.id}
-                  className={`p-2 rounded cursor-pointer flex items-center justify-between group ${
-                    tab.id === activeTabId ? 'bg-primary text-white' : 'hover:bg-gray-800'
-                  }`}
-                  onClick={() => setActiveTabId(tab.id)}
-                >
-                  {editingTabId === tab.id ? (
-                    <input
-                      type="text"
-                      value={tab.name}
-                      onChange={e => updateTabName(tab.id, e.target.value)}
-                      onBlur={() => setEditingTabId(null)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          setEditingTabId(null);
-                        } else if (e.key === 'Escape') {
-                          updateTabName(tab.id, originalName);
-                          setEditingTabId(null);
-                        }
-                      }}
-                      onClick={e => e.stopPropagation()}
-                      className={`bg-transparent outline-none flex-1 ${
-                        tab.id === activeTabId ? 'text-white' : 'text-gray-300'
-                      }`}
-                      autoFocus
-                    />
-                  ) : (
-                    <span className={tab.id === activeTabId ? 'text-white' : 'text-gray-300'}>
-                      {tab.name}
-                    </span>
-                  )}
-                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        setOriginalName(tab.name);
-                        setEditingTabId(tab.id);
-                      }}
-                      className="ml-2 p-1 hover:bg-gray-700 rounded"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        closeTab(tab.id);
-                      }}
-                      className="ml-1 p-1 hover:bg-gray-700 rounded text-red-400"
-                      disabled={tabs.length === 1}
-                      title={tabs.length === 1 ? "Can't delete the last tab" : "Delete tab"}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={addNewTab}
-              className="mt-4 w-full p-2 bg-gray-800 hover:bg-gray-700 rounded text-white"
-            >
-              + New File
-            </button>
-          </div>
-        )}
-      </div>
+      <Sidebar
+        tabs={tabs}
+        activeTabId={activeTabId}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        setActiveTabId={setActiveTabId}
+        updateTabName={updateTabName}
+        closeTab={closeTab}
+        addNewTab={addNewTab}
+      />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col p-4">
-        <nav className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">RunJS</h1>
-            <div className="flex items-center gap-2 bg-gray-800 p-1 rounded">
-              <button
-                onClick={() => handleModuleTypeChange('esm')}
-                className={`px-3 py-1 rounded ${
-                  activeTab?.moduleType === 'esm'
-                    ? 'bg-primary text-white'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                ES Modules
-              </button>
-              <button
-                onClick={() => handleModuleTypeChange('commonjs')}
-                className={`px-3 py-1 rounded ${
-                  activeTab?.moduleType === 'commonjs'
-                    ? 'bg-primary text-white'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                CommonJS
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsPackagesModalOpen(true)}
-              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2"
-            >
-              Packages ({installedPackages.length})
-            </button>
-            <a
-              href="/credits"
-              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded"
-            >
-              Credits
-            </a>
-            <button
-              onClick={handleShare}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
-            >
-              Share
-            </button>
-            <button
-              onClick={() => setIsEmbedModalOpen(true)}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
-            >
-              Embed
-            </button>
-          </div>
-        </nav>
+        <Navigation
+          activeModuleType={activeTab?.moduleType || 'esm'}
+          onModuleTypeChange={handleModuleTypeChange}
+          onOpenPackages={() => setIsPackagesModalOpen(true)}
+          onShare={() => setIsShareModalOpen(true)}
+          onEmbed={() => setIsEmbedModalOpen(true)}
+          installedPackagesCount={installedPackages.length}
+        />
 
         <div className="flex flex-1 gap-4">
-          <div className="flex-1 min-h-[500px] relative">
-            <button
-              onClick={handleRunCode}
-              className="absolute top-2 right-2 z-10 bg-primary hover:bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg opacity-75 hover:opacity-100 hover:font-bold transition-all"
-              disabled={isRunning}
-            >
-              {isRunning ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Running...
-                </>
-              ) : (
-                'Run'
-              )}
-            </button>
-            {activeTab && (
-              <Editor
-                height="100%"
-                defaultLanguage="javascript"
-                theme="vs-dark"
-                value={activeTab.code}
-                onChange={value => {
-                  if (!value) return
-                  setTabs(tabs.map(tab => (tab.id === activeTabId ? { ...tab, code: value } : tab)))
-                }}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                }}
-                onMount={handleEditorMount}
-              />
-            )}
-          </div>
-          <div className="flex-1 flex flex-col">
-            <div className="bg-gray-800 p-4 rounded min-h-[400px] font-mono whitespace-pre-wrap overflow-auto">
-              {output || 'Output will appear here...'}
-            </div>
-          </div>
+          {activeTab && (
+            <CodeEditor
+              code={activeTab.code}
+              onChange={value => {
+                setTabs(tabs.map(tab => (tab.id === activeTabId ? { ...tab, code: value } : tab)))
+              }}
+              onRun={handleRunCode}
+              isRunning={isRunning}
+            />
+          )}
+          <Output output={output} />
         </div>
       </div>
 
-      {/* Packages Modal */}
-      {isPackagesModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-xl font-semibold text-white">Manage Packages</h2>
-              <button
-                onClick={() => setIsPackagesModalOpen(false)}
-                className="text-gray-400 hover:text-white focus:outline-none"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <input
-                  type="text"
-                  value={packageInput}
-                  onChange={e => setPackageInput(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      handleInstallPackage()
-                    }
-                  }}
-                  placeholder="Package name"
-                  className="flex-1 bg-gray-800 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <button
-                  onClick={handleInstallPackage}
-                  className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isInstalling || !packageInput.trim()}
-                >
-                  {isInstalling ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Installing...
-                    </>
-                  ) : (
-                    'Install'
-                  )}
-                </button>
-              </div>
+      <PackagesModal
+        isOpen={isPackagesModalOpen}
+        onClose={() => setIsPackagesModalOpen(false)}
+        installedPackages={installedPackages}
+        isLoadingPackages={isLoadingPackages}
+        packageInput={packageInput}
+        setPackageInput={setPackageInput}
+        isInstalling={isInstalling}
+        onInstall={handleInstallPackage}
+        onUninstall={handleUninstallPackage}
+      />
 
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {isLoadingPackages ? (
-                  <div className="text-center py-4">
-                    <svg className="animate-spin h-6 w-6 mx-auto" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    <p className="text-gray-400 mt-2">Loading packages...</p>
-                  </div>
-                ) : installedPackages.length === 0 ? (
-                  <p className="text-gray-400 text-center py-4">No packages installed</p>
-                ) : (
-                  installedPackages.map(pkg => (
-                    <div
-                      key={pkg.name}
-                      className="flex items-center justify-between bg-gray-800 p-2 rounded"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{pkg.name}</span>
-                        <span className="text-xs text-gray-400">{pkg.version}</span>
-                      </div>
-                      <button
-                        onClick={() => handleUninstallPackage(pkg.name)}
-                        className="text-red-400 hover:text-red-300 focus:outline-none px-2 py-1 hover:bg-gray-700 rounded"
-                        title="Uninstall package"
-                      >
-                        Uninstall
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+      />
 
-      {/* Share Modal */}
-      {isShareModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-xl font-semibold text-white">Share Code</h2>
-              <button
-                onClick={() => setIsShareModalOpen(false)}
-                className="text-gray-400 hover:text-white focus:outline-none"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center gap-2">
-                <input
-                  ref={shareInputRef}
-                  type="text"
-                  value={window.location.href}
-                  readOnly
-                  className="flex-1 bg-gray-800 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleCopyShare}
-                    className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Copy
-                  </button>
-                  {isCopied && (
-                    <span className="text-green-500 text-sm">Copied!</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Embed Modal */}
-      {isEmbedModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-3xl">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-xl font-semibold text-white">Embed Code</h2>
-              <button
-                onClick={() => setIsEmbedModalOpen(false)}
-                className="text-gray-400 hover:text-white focus:outline-none"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={embedInputRef}
-                    type="text"
-                    value={`<iframe src="${window.location.origin}/embed?code=${btoa(activeTab?.code || '')}&moduleType=${activeTab?.moduleType}" width="100%" height="600" frameborder="0"></iframe>`}
-                    readOnly
-                    className="flex-1 bg-gray-800 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <button
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(embedInputRef.current?.value || '')
-                        setIsEmbedCopied(true)
-                        setTimeout(() => setIsEmbedCopied(false), 2000)
-                      } catch (error) {
-                        console.error('Failed to copy embed code:', error)
-                      }
-                    }}
-                    className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Copy
-                  </button>
-                </div>
-                {isEmbedCopied && (
-                  <span className="text-green-500 text-sm">Copied!</span>
-                )}
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold mb-2">Preview</h3>
-                  <div className="border border-gray-700 rounded overflow-hidden">
-                    <iframe
-                      src={`${window.location.origin}/embed?code=${btoa(activeTab?.code || '')}&moduleType=${activeTab?.moduleType}`}
-                      width="100%"
-                      height="500"
-                      frameBorder="0"
-                      title="RunJS Embed Preview"
-                      className="w-full"
-                      style={{ minHeight: '500px' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {activeTab && (
+        <EmbedModal
+          isOpen={isEmbedModalOpen}
+          onClose={() => setIsEmbedModalOpen(false)}
+          code={activeTab.code}
+          moduleType={activeTab.moduleType}
+        />
       )}
     </main>
   )
