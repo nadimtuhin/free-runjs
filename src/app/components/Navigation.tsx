@@ -4,6 +4,7 @@ import { ModuleType } from '../utils/moduleTypes'
 import { FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import { FaFacebook } from 'react-icons/fa'
+import { FaStar } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { APP_CONFIG } from '../config/app'
 
@@ -24,6 +25,22 @@ export function Navigation({
   onEmbed,
   installedPackagesCount,
 }: NavigationProps) {
+  const [starCount, setStarCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    const fetchStarCount = async () => {
+      try {
+        const repoPath = APP_CONFIG.social.githubRepo.replace('https://github.com/', '')
+        const response = await fetch(`https://api.github.com/repos/${repoPath}`)
+        const data = await response.json()
+        setStarCount(data.stargazers_count)
+      } catch (error) {
+        console.error('Failed to fetch star count:', error)
+      }
+    }
+    fetchStarCount()
+  }, [])
+
   return (
     <nav className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-4">
@@ -62,9 +79,11 @@ export function Navigation({
           href={APP_CONFIG.social.githubRepo}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
+          className="bg-primary hover:bg-blue-600 text-white px-4 py-1.5 rounded flex items-center gap-2 cursor-pointer transition-colors duration-200"
         >
           <FaGithub className="text-lg" />
+          <FaStar className="text-lg text-yellow-300" />
+          <span>{starCount !== null ? starCount.toLocaleString() : '...'}</span>
         </a>
         <a
           href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(APP_CONFIG.contact.website)}&text=${encodeURIComponent(APP_CONFIG.sharing.defaultText)}`}
