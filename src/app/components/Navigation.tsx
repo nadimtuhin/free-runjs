@@ -2,8 +2,6 @@
 
 import { ModuleType } from '../utils/moduleTypes'
 import { FaGithub } from 'react-icons/fa'
-import { FaXTwitter } from 'react-icons/fa6'
-import { FaFacebook } from 'react-icons/fa'
 import { FaStar } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { APP_CONFIG } from '../config/app'
@@ -84,22 +82,6 @@ export function Navigation({
           <FaGithub className="text-lg" />
           <FaStar className="text-lg text-yellow-300" />
           <span>{starCount !== null ? starCount.toLocaleString() : '...'}</span>
-        </a>
-        <a
-          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(APP_CONFIG.contact.website)}&text=${encodeURIComponent(APP_CONFIG.sharing.defaultText)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
-        >
-          <FaXTwitter className="text-lg" />
-        </a>
-        <a
-          href={`https://www.facebook.com/dialog/share?app_id=${APP_CONFIG.social.facebookAppId}&href=${encodeURIComponent(APP_CONFIG.contact.website)}&display=popup`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
-        >
-          <FaFacebook className="text-lg" />
         </a>
         <a
           href={APP_CONFIG.social.feedbackForm}
