@@ -11,13 +11,13 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "security:scan": "./scripts/security-scan.sh",
-    "security:audit": "npm audit --audit-level=moderate",
+    "security:audit": "pnpm audit --audit-level=moderate",
     "security:trivy": "trivy fs --config trivy.yaml .",
     "security:secrets": "trivy fs --scanners secret .",
     "security:docker": "docker build -f Dockerfile.security -t runjs:scan . && trivy image runjs:scan",
-    "security:fix": "npm audit fix",
-    "precommit": "npm run lint && npm run test && npm run security:audit",
-    "wasm:setup": "npm run wasm:install-wasmtime",
+    "security:fix": "pnpm audit fix",
+    "precommit": "pnpm run lint && pnpm run test && pnpm run security:audit",
+    "wasm:setup": "pnpm run wasm:install-wasmtime",
     "wasm:install-wasmtime": "curl -sSf https://wasmtime.dev/install.sh | bash",
     "wasm:test": "node scripts/test-wasm.js",
     "wasm:benchmark": "node scripts/benchmark-wasm.js"
@@ -28,6 +28,7 @@
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.31",
+    "lodash": "^4.17.21",
     "next": "14.2.31",
     "react": "^18",
     "react-dom": "^18",
@@ -43,7 +44,7 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "pnpm": ">=8.0.0"
   },
   "optionalDependencies": {
     "@wasmtime/wasmtime": "^14.0.0"
