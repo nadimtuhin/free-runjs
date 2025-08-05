@@ -7,10 +7,11 @@ RUN addgroup --system --gid 1001 builduser && \
 
 WORKDIR /app
 
-# Install dependencies only when needed
-COPY package.json package-lock.json ./
-RUN npm ci --only=production --no-optional && \
-    npm cache clean --force
+# Install pnpm and dependencies only when needed
+RUN npm install -g pnpm
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile && \
+    pnpm store prune
 
 # Copy source files
 COPY . .
@@ -18,7 +19,7 @@ COPY . .
 # Create required directories with proper permissions
 RUN mkdir -p public temp && \
     chown -R builduser:builduser /app && \
-    npm run build
+    pnpm run build
 
 # Production image with security hardening
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
@@ -36,8 +37,8 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=30000 \
     NODE_OPTIONS="--max-old-space-size=256 --max-http-header-size=8192" \
-    NPM_CONFIG_UPDATE_NOTIFIER=false \
-    NPM_CONFIG_FUND=false \
+    PNPM_CONFIG_UPDATE_NOTIFIER=false \
+    PNPM_CONFIG_FUND=false \
     FORCE_COLOR=0
 
 # Create restricted non-root user

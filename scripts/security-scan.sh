@@ -39,8 +39,8 @@ check_dependencies() {
     
     local missing_tools=()
     
-    if ! command -v npm &> /dev/null; then
-        missing_tools+=("npm")
+    if ! command -v pnpm &> /dev/null; then
+        missing_tools+=("pnpm")
     fi
     
     if ! command -v trivy &> /dev/null; then
@@ -60,18 +60,18 @@ check_dependencies() {
     print_success "All dependencies are available"
 }
 
-# Run npm audit
-run_npm_audit() {
-    print_status "Running npm audit..."
+# Run pnpm audit
+run_pnpm_audit() {
+    print_status "Running pnpm audit..."
     
-    if npm audit --audit-level=moderate --json > security-reports/npm-audit.json 2>/dev/null; then
-        print_success "npm audit completed successfully"
+    if pnpm audit --audit-level=moderate --json > security-reports/pnpm-audit.json 2>/dev/null; then
+        print_success "pnpm audit completed successfully"
     else
-        print_warning "npm audit found vulnerabilities (check security-reports/npm-audit.json)"
+        print_warning "pnpm audit found vulnerabilities (check security-reports/pnpm-audit.json)"
     fi
     
     # Generate human-readable report
-    npm audit --audit-level=moderate > security-reports/npm-audit.txt 2>/dev/null || true
+    pnpm audit --audit-level=moderate > security-reports/pnpm-audit.txt 2>/dev/null || true
 }
 
 # Run Trivy filesystem scan
@@ -173,13 +173,13 @@ generate_summary() {
 
 **Generated:** $(date)
 **Project:** RunJS
-**Scan Types:** npm audit, Trivy (filesystem & secrets), Docker, Semgrep SAST
+**Scan Types:** pnpm audit, Trivy (filesystem & secrets), Docker, Semgrep SAST
 
 ## Scan Results
 
-### NPM Audit
-- Report: \`npm-audit.json\` and \`npm-audit.txt\`
-- Status: $([ -f security-reports/npm-audit.json ] && echo "✅ Completed" || echo "❌ Failed")
+### PNPM Audit
+- Report: \`pnpm-audit.json\` and \`pnpm-audit.txt\`
+- Status: $([ -f security-reports/pnpm-audit.json ] && echo "✅ Completed" || echo "❌ Failed")
 
 ### Trivy Filesystem Scan
 - Report: \`trivy-fs.json\` and \`trivy-fs.txt\`
@@ -221,12 +221,12 @@ main() {
     
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
-        print_status "Installing npm dependencies..."
-        npm install
+        print_status "Installing pnpm dependencies..."
+        pnpm install
     fi
     
     # Run all scans
-    run_npm_audit
+    run_pnpm_audit
     run_trivy_fs
     run_trivy_secrets
     run_docker_scan

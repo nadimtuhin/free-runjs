@@ -2,16 +2,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies only when needed
-COPY package.json package-lock.json ./
-RUN npm ci
+# Install pnpm and dependencies only when needed
+RUN npm install -g pnpm
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # Copy source files
 COPY . .
 
 # Create required directories
 RUN mkdir -p public temp && \
-    npm run build
+    pnpm run build
 
 # Production image
 FROM node:20-alpine AS runner
