@@ -26,19 +26,32 @@ export default function Credits() {
                 </a>
               </p>
               <p>
-                <a href="https://nadimtuhin.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                <a
+                  href="https://nadimtuhin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
                   nadimtuhin.com
                 </a>
               </p>
               <p>
-                <a href="https://github.com/nadimtuhin" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                <a
+                  href="https://github.com/nadimtuhin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
                   github.com/nadimtuhin
                 </a>
               </p>
             </div>
           </div>
         </div>
-        <Link href="/" className="inline-block mt-8 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded transition-colors">
+        <Link
+          href="/"
+          className="inline-block mt-8 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded transition-colors"
+        >
           Back to Editor
         </Link>
       </div>

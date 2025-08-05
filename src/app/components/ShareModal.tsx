@@ -37,10 +37,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
       <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h2 className="text-xl font-semibold text-white">Share Code</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white focus:outline-none"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white focus:outline-none">
             ×
           </button>
         </div>
@@ -60,9 +57,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
               >
                 Copy
               </button>
-              {isCopied && (
-                <span className="text-green-500 text-sm">Copied!</span>
-              )}
+              {isCopied && <span className="text-green-500 text-sm">Copied!</span>}
             </div>
           </div>
         </div>

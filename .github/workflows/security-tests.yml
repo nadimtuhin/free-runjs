@@ -1,0 +1,63 @@
+name: Security Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run security audit
+      run: npm audit --audit-level high
+    
+    - name: Run ESLint security checks
+      run: npm run lint
+    
+    - name: Check code formatting
+      run: npm run format -- --check
+    
+    - name: Install Playwright browsers
+      run: npx playwright install
+    
+    - name: Start application
+      run: |
+        npm run build
+        npm start &
+        sleep 10
+      env:
+        NODE_ENV: production
+        
+    - name: Run security tests
+      run: npm run test:all -- tests/security.spec.ts
+      env:
+        NODE_ENV: production
+        TEST_API_KEY: ${{ secrets.TEST_API_KEY }}
+        BASE_URL: http://localhost:3000
+    
+    - name: Docker security scan
+      run: |
+        docker build -t runjs-security-test .
+        docker run --rm -d -p 3000:30000 --name runjs-test runjs-security-test
+        sleep 5
+        curl -f http://localhost:3000/api/health || exit 1
+        docker stop runjs-test
+    
+    - name: Dependency vulnerability check
+      run: |
+        npx audit-ci --config audit-ci.json
+      continue-on-error: true

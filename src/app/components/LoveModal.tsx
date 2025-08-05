@@ -10,11 +10,14 @@ interface LoveModalProps {
 }
 
 export function LoveModal({ isOpen, onClose }: LoveModalProps) {
-  const handleEscapeKey = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      onClose()
-    }
-  }, [onClose])
+  const handleEscapeKey = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    },
+    [onClose]
+  )
 
   useEffect(() => {
     if (isOpen) {
@@ -42,9 +45,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
         </div>
         <div className="p-6 space-y-6">
           <div className="space-y-4">
-            <p className="text-gray-300">
-              Enjoying RunJS? Help us make it even better by:
-            </p>
+            <p className="text-gray-300">Enjoying RunJS? Help us make it even better by:</p>
 
             <div className="flex flex-col gap-4">
               <a

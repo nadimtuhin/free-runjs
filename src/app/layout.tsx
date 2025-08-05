@@ -14,14 +14,12 @@ export const metadata: Metadata = {
       { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/favicon/favicon.ico', sizes: '48x48' },
     ],
-    apple: [
-      { url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+    apple: [{ url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     other: [
       {
         rel: 'mask-icon',
         url: '/favicon/safari-pinned-tab.svg',
-        color: '#5bbad5'
+        color: '#5bbad5',
       },
     ],
   },
@@ -29,7 +27,7 @@ export const metadata: Metadata = {
   other: {
     'msapplication-TileColor': '#2b5797',
     'msapplication-config': '/favicon/browserconfig.xml',
-    'theme-color': '#ffffff'
+    'theme-color': '#ffffff',
   },
   openGraph: {
     title: 'RunJS - Node.js/JavaScript Playground',
@@ -56,19 +54,19 @@ function Footer() {
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-gray-900 text-gray-400 py-2 px-4 text-sm text-center border-t border-gray-800">
       <div className="flex justify-center items-center gap-4">
-        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+        <Link href="/privacy" className="hover:text-white transition-colors">
+          Privacy Policy
+        </Link>
         <span>•</span>
-        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+        <Link href="/terms" className="hover:text-white transition-colors">
+          Terms of Service
+        </Link>
       </div>
     </footer>
   )
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>

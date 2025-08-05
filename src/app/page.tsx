@@ -78,12 +78,14 @@ function EditorContent() {
           throw new Error('Invalid module type in URL')
         }
 
-        setTabs([{
-          id: generateUUID(),
-          name: 'Shared Code',
-          code: decodedCode,
-          moduleType
-        }])
+        setTabs([
+          {
+            id: generateUUID(),
+            name: 'Shared Code',
+            code: decodedCode,
+            moduleType,
+          },
+        ])
       } catch (error) {
         console.error('Failed to load code from URL:', error)
         const defaultTab = createNewTab('esm')
@@ -248,7 +250,9 @@ function EditorContent() {
       setPackageInput('')
       await fetchInstalledPackages()
     } catch (error) {
-      setOutput(`Error installing package: ${error instanceof Error ? error.message : String(error)}`)
+      setOutput(
+        `Error installing package: ${error instanceof Error ? error.message : String(error)}`
+      )
     } finally {
       setIsInstalling(false)
     }
@@ -284,7 +288,9 @@ function EditorContent() {
       setOutput(`Successfully uninstalled ${packageName}`)
       await fetchInstalledPackages()
     } catch (error) {
-      setOutput(`Error uninstalling package: ${error instanceof Error ? error.message : String(error)}`)
+      setOutput(
+        `Error uninstalling package: ${error instanceof Error ? error.message : String(error)}`
+      )
     }
   }
 
@@ -292,20 +298,20 @@ function EditorContent() {
     const updatedTabs = tabs.map(tab => {
       if (tab.id === activeTabId) {
         // Only replace code if it's empty or matches the default code for current module type
-        const shouldReplaceCode = !tab.code.trim() || tab.code === defaultCode[tab.moduleType];
+        const shouldReplaceCode = !tab.code.trim() || tab.code === defaultCode[tab.moduleType]
         const newCode = shouldReplaceCode
           ? defaultCode[type]
-          : convertCode(tab.code, tab.moduleType, type);
+          : convertCode(tab.code, tab.moduleType, type)
 
         return {
           ...tab,
           moduleType: type,
-          code: newCode
-        };
+          code: newCode,
+        }
       }
-      return tab;
-    });
-    setTabs(updatedTabs);
+      return tab
+    })
+    setTabs(updatedTabs)
   }
 
   return (
@@ -358,10 +364,7 @@ function EditorContent() {
         onUninstall={handleUninstallPackage}
       />
 
-      <ShareModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-      />
+      <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
 
       {activeTab && (
         <EmbedModal
@@ -379,11 +382,13 @@ function EditorContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
       <EditorContent />
     </Suspense>
   )

@@ -14,9 +14,11 @@ declare global {
 export function Analytics() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      window.plausible = window.plausible || function(...args) {
-        (window.plausible.q = window.plausible.q || []).push(args)
-      }
+      window.plausible =
+        window.plausible ||
+        function (...args) {
+          ;(window.plausible.q = window.plausible.q || []).push(args)
+        }
     }
   }, [])
 

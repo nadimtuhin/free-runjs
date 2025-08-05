@@ -24,12 +24,14 @@ A web-based JavaScript playground that lets you write and execute JavaScript cod
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/nadimtuhin/free-runjs.git
 cd free-runjs
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 # or
@@ -37,22 +39,26 @@ yarn install
 ```
 
 3. Create required directories:
+
 ```bash
 mkdir -p temp/cjs temp/esm
 ```
 
 4. Set up environment variables:
+
 ```bash
 # Create a .env.local file with the following content
 touch .env.local
 ```
 
 Add the following to `.env.local`:
+
 ```env
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
 5. Run the development server:
+
 ```bash
 npm run dev
 # or
@@ -64,6 +70,7 @@ yarn dev
 ### Production Build
 
 1. Build the application:
+
 ```bash
 npm run build
 # or
@@ -71,6 +78,7 @@ yarn build
 ```
 
 2. Start the production server:
+
 ```bash
 npm start
 # or
@@ -115,15 +123,17 @@ yarn start
 1. **Missing temp directory**: If you see errors about missing directories, make sure you've created the temp directories as mentioned in the installation steps.
 
 2. **Node.js version**: Make sure you're using Node.js v18 or higher. You can check your version with:
+
 ```bash
 node --version
 ```
 
 3. **Port already in use**: If port 3000 is already in use, you can use a different port:
+
 ```bash
 PORT=3001 npm run dev
 ```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

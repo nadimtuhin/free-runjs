@@ -94,7 +94,7 @@ export function Sidebar({
                     }}
                     className="ml-1 p-1 hover:bg-gray-700 rounded text-red-400"
                     disabled={tabs.length === 1}
-                    title={tabs.length === 1 ? "Can't delete the last tab" : "Delete tab"}
+                    title={tabs.length === 1 ? "Can't delete the last tab" : 'Delete tab'}
                   >
                     ×
                   </button>

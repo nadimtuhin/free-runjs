@@ -33,10 +33,7 @@ export function EmbedModal({ isOpen, onClose, code, moduleType }: EmbedModalProp
       <div className="bg-gray-900 rounded-lg shadow-xl w-full max-w-3xl">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h2 className="text-xl font-semibold text-white">Embed Code</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white focus:outline-none"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white focus:outline-none">
             ×
           </button>
         </div>
@@ -57,9 +54,7 @@ export function EmbedModal({ isOpen, onClose, code, moduleType }: EmbedModalProp
                 Copy
               </button>
             </div>
-            {isEmbedCopied && (
-              <span className="text-green-500 text-sm">Copied!</span>
-            )}
+            {isEmbedCopied && <span className="text-green-500 text-sm">Copied!</span>}
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Preview</h3>
               <div className="border border-gray-700 rounded overflow-hidden">

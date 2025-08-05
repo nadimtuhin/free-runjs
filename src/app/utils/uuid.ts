@@ -5,11 +5,11 @@
  */
 export function generateUUID(): string {
   try {
-    return crypto.randomUUID();
+    return crypto.randomUUID()
   } catch (error) {
     // Fallback for environments where crypto.randomUUID() is not available
-    const timestamp = new Date().getTime();
-    const random = Math.random().toString(36).substring(2, 15);
-    return `${timestamp}-${random}`;
+    const timestamp = new Date().getTime()
+    const random = Math.random().toString(36).substring(2, 15)
+    return `${timestamp}-${random}`
   }
 }

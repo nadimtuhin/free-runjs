@@ -83,7 +83,9 @@ function EmbedPageContent() {
     <main className="flex flex-col h-[calc(100vh-36px)]">
       <div className="flex items-center justify-between p-1 bg-gray-900">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Module Type: {moduleType === 'esm' ? 'ES Modules' : 'CommonJS'}</span>
+          <span className="text-sm text-gray-400">
+            Module Type: {moduleType === 'esm' ? 'ES Modules' : 'CommonJS'}
+          </span>
         </div>
         <button
           onClick={() => setShowEmbed(!showEmbed)}
