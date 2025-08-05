@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Code complexity analysis
     const complexity = analyzeCodeComplexity(code)
-    if (complexity.score > 20) {
+    if (complexity.complexity > 20) {
       securityLogger.logSecurityEvent({
         type: 'code_execution_blocked',
         ip,
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         severity: 'medium',
         blocked: true,
         details: { 
-          complexity: complexity.score,
+          complexity: complexity.complexity,
           violations: complexity.violations
         }
       })
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
       packages,
       securityChecks: {
         dangerousPatterns: 0,
-        complexity: complexity.score,
+        complexity: complexity.complexity,
         suspiciousPatterns: 0,
         maliciousContent: 0
       }

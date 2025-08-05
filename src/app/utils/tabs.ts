@@ -16,9 +16,11 @@ export const createNewTab = (moduleType: ModuleType): EditorTab => ({
 })
 
 export const isValidTab = (tab: any): tab is EditorTab => {
+  if (!tab || typeof tab !== 'object') {
+    return false
+  }
+  
   return (
-    tab &&
-    typeof tab === 'object' &&
     typeof tab.id === 'string' &&
     typeof tab.name === 'string' &&
     typeof tab.code === 'string' &&

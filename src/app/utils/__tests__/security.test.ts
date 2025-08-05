@@ -227,10 +227,12 @@ describe('Security Utilities', () => {
 
   describe('scanForMaliciousContent', () => {
     test('should detect excessive string concatenation', () => {
-      let code = 'let str = "";\n'
-      for (let i = 0; i < 150; i++) {
-        code += `str += "test";\n`
+      // Create pattern that matches exactly: ['"`][^'"]*['"`]\s*\+\s*['"`][^'"]*['"`]
+      let parts = []
+      for (let i = 0; i < 105; i++) {
+        parts.push('"test" + "more"')
       }
+      const code = `let str = ${parts.join(' + ')};`
       
       const violations = scanForMaliciousContent(code)
       

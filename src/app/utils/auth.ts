@@ -1,13 +1,17 @@
 import { NextRequest } from 'next/server'
 import { securityLogger, getClientIP, getUserAgent } from './security-logger'
 
-// In production, store these securely (database, vault, etc.)
-const VALID_API_KEYS = new Set(
-  [process.env.API_KEY_1, process.env.API_KEY_2, process.env.API_KEY_3].filter(Boolean)
-)
+// Get valid API keys dynamically to support environment changes in tests
+function getValidAPIKeys(): Set<string> {
+  return new Set(
+    [process.env.API_KEY_1, process.env.API_KEY_2, process.env.API_KEY_3].filter(Boolean) as string[]
+  )
+}
 
-// For development/demo, allow execution without API key
-const ALLOW_ANONYMOUS = process.env.NODE_ENV === 'development'
+// Check if anonymous access is allowed dynamically
+function isAnonymousAllowed(): boolean {
+  return process.env.NODE_ENV === 'development'
+}
 
 export interface AuthResult {
   authenticated: boolean
@@ -17,7 +21,7 @@ export interface AuthResult {
 
 export function validateAPIKey(request: NextRequest): AuthResult {
   // Skip authentication in development mode
-  if (ALLOW_ANONYMOUS) {
+  if (isAnonymousAllowed()) {
     return { authenticated: true, reason: 'development_mode' }
   }
 
@@ -60,7 +64,8 @@ export function validateAPIKey(request: NextRequest): AuthResult {
   }
 
   // Validate API key
-  if (!VALID_API_KEYS.has(providedKey)) {
+  const validKeys = getValidAPIKeys()
+  if (!validKeys.has(providedKey)) {
     securityLogger.logSecurityEvent({
       type: 'authentication_failed',
       ip,

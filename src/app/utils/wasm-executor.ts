@@ -293,20 +293,64 @@ export class WASMExecutor {
   }
 
   /**
-   * Fallback to native execution
+   * Fallback to native execution using child_process
    */
   private async fallbackToNative(code: string, moduleType: 'esm' | 'commonjs', startTime: number): Promise<WASMExecutionResult> {
-    // Import the existing execution logic
-    const { executeCode } = await import('../api/execute/mjs/route')
-    
-    // This is a simplified fallback - in practice, you'd integrate with existing execution
-    return {
-      output: 'WASM fallback executed',
-      exitCode: 0,
-      executionTime: Date.now() - startTime,
-      memoryUsed: 0,
-      wasmUsed: false
-    }
+    return new Promise((resolve) => {
+      try {
+        const wrappedCode = this.wrapCodeForExecution(code, moduleType)
+        const tempFile = join(this.tempDir, `fallback.${moduleType === 'esm' ? 'mjs' : 'js'}`)
+        
+        // Write code to temporary file and execute
+        const child = spawn('node', ['-e', wrappedCode], {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          timeout: this.parseTimeLimit(this.options.cpuTimeLimit)
+        })
+        
+        let output = ''
+        let error = ''
+        
+        child.stdout.on('data', (data) => {
+          output += data.toString()
+        })
+        
+        child.stderr.on('data', (data) => {
+          error += data.toString()
+        })
+        
+        child.on('close', (exitCode) => {
+          resolve({
+            output,
+            error: error || undefined,
+            exitCode: exitCode || 0,
+            executionTime: Date.now() - startTime,
+            memoryUsed: 0, // Not tracked in fallback mode
+            wasmUsed: false
+          })
+        })
+        
+        child.on('error', (err) => {
+          resolve({
+            output: '',
+            error: err.message,
+            exitCode: 1,
+            executionTime: Date.now() - startTime,
+            memoryUsed: 0,
+            wasmUsed: false
+          })
+        })
+        
+      } catch (error) {
+        resolve({
+          output: '',
+          error: error instanceof Error ? error.message : String(error),
+          exitCode: 1,
+          executionTime: Date.now() - startTime,
+          memoryUsed: 0,
+          wasmUsed: false
+        })
+      }
+    })
   }
 
   /**

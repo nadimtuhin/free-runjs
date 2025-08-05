@@ -5,7 +5,7 @@ import { writeFile, readFile, mkdir, rm } from 'fs/promises'
 // Mock dependencies
 jest.mock('child_process')
 jest.mock('fs/promises')
-jest.mock('./uuid', () => ({
+jest.mock('../uuid', () => ({
   generateUUID: jest.fn(() => 'test-uuid-123')
 }))
 
@@ -15,15 +15,33 @@ const mockMkdir = mkdir as jest.MockedFunction<typeof mkdir>
 const mockRm = rm as jest.MockedFunction<typeof rm>
 
 // Mock process methods
-const mockProcess = {
-  stdout: {
-    on: jest.fn()
-  },
-  stderr: {
-    on: jest.fn()
-  },
-  on: jest.fn(),
-  kill: jest.fn()
+// Helper function to create properly mocked child process
+function createMockChild(stdout = '', stderr = '', exitCode = 0, shouldError = false) {
+  return {
+    stdout: {
+      on: jest.fn((event, callback) => {
+        if (event === 'data' && stdout) {
+          setTimeout(() => callback(Buffer.from(stdout)), 10)
+        }
+      })
+    },
+    stderr: {
+      on: jest.fn((event, callback) => {
+        if (event === 'data' && stderr) {
+          setTimeout(() => callback(Buffer.from(stderr)), 10)
+        }
+      })
+    },
+    on: jest.fn((event, callback) => {
+      if (event === 'close' && !shouldError) {
+        setTimeout(() => callback(exitCode), 20)
+      }
+      if (event === 'error' && shouldError) {
+        setTimeout(() => callback(new Error('Process error')), 15)
+      }
+    }),
+    kill: jest.fn()
+  }
 }
 
 describe('WASM Executor', () => {
@@ -54,24 +72,7 @@ describe('WASM Executor', () => {
 
     test('should execute simple JavaScript code', async () => {
       // Mock successful process execution
-      mockSpawn.mockReturnValue({
-        ...mockProcess,
-        stdout: {
-          on: jest.fn((event, callback) => {
-            if (event === 'data') {
-              callback(Buffer.from('Hello World\n'))
-            }
-          })
-        },
-        stderr: {
-          on: jest.fn()
-        },
-        on: jest.fn((event, callback) => {
-          if (event === 'close') {
-            callback(0) // Success exit code
-          }
-        })
-      } as any)
+      mockSpawn.mockReturnValue(createMockChild('Hello World\n', '', 0) as any)
 
       const executor = new WASMExecutor()
       const result = await executor.execute('console.log("Hello World")')
@@ -83,24 +84,7 @@ describe('WASM Executor', () => {
 
     test('should handle execution errors', async () => {
       // Mock error process execution
-      mockSpawn.mockReturnValue({
-        ...mockProcess,
-        stdout: {
-          on: jest.fn()
-        },
-        stderr: {
-          on: jest.fn((event, callback) => {
-            if (event === 'data') {
-              callback(Buffer.from('ReferenceError: x is not defined\n'))
-            }
-          })
-        },
-        on: jest.fn((event, callback) => {
-          if (event === 'close') {
-            callback(1) // Error exit code
-          }
-        })
-      } as any)
+      mockSpawn.mockReturnValue(createMockChild('', 'ReferenceError: x is not defined\n', 1) as any)
 
       const executor = new WASMExecutor()
       const result = await executor.execute('console.log(x)')
@@ -130,24 +114,8 @@ describe('WASM Executor', () => {
     })
 
     test('should handle both ESM and CommonJS modules', async () => {
-      mockSpawn.mockReturnValue({
-        ...mockProcess,
-        stdout: {
-          on: jest.fn((event, callback) => {
-            if (event === 'data') {
-              callback(Buffer.from('Module executed\n'))
-            }
-          })
-        },
-        stderr: {
-          on: jest.fn()
-        },
-        on: jest.fn((event, callback) => {
-          if (event === 'close') {
-            callback(0)
-          }
-        })
-      } as any)
+      // Mock successful execution for both module types
+      mockSpawn.mockReturnValue(createMockChild('Module executed\n', '', 0) as any)
 
       const executor = new WASMExecutor()
 
@@ -163,15 +131,8 @@ describe('WASM Executor', () => {
     test('should create proper directory structure', async () => {
       const executor = new WASMExecutor()
       
-      // Execute to trigger directory creation
-      mockSpawn.mockReturnValue({
-        ...mockProcess,
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn() },
-        on: jest.fn((event, callback) => {
-          if (event === 'close') callback(0)
-        })
-      } as any)
+      // Mock successful execution
+      mockSpawn.mockReturnValue(createMockChild('test output\n', '', 0) as any)
 
       await executor.execute('console.log("test")')
 
@@ -189,14 +150,8 @@ describe('WASM Executor', () => {
     test('should cleanup temporary files', async () => {
       const executor = new WASMExecutor()
       
-      mockSpawn.mockReturnValue({
-        ...mockProcess,
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn() },
-        on: jest.fn((event, callback) => {
-          if (event === 'close') callback(0)
-        })
-      } as any)
+      // Mock successful execution
+      mockSpawn.mockReturnValue(createMockChild('test output\n', '', 0) as any)
 
       await executor.execute('console.log("test")')
 
