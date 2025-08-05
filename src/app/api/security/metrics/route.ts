@@ -11,12 +11,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const metrics = securityLogger.getSecurityMetrics()
-    const suspiciousIPs = securityLogger.getSuspiciousIPs()
 
-    return NextResponse.json({
-      metrics,
-      suspicious_ips: suspiciousIPs,
-      timestamp: new Date().toISOString(),
+    return NextResponse.json(metrics, {
+      headers: {
+        'cache-control': 'no-cache, no-store, must-revalidate',
+      },
     })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to retrieve security metrics' }, { status: 500 })

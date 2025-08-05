@@ -11,9 +11,13 @@ export async function GET(request: NextRequest) {
 
   try {
     const url = new URL(request.url)
-    const limit = parseInt(url.searchParams.get('limit') || '100')
+    const limitParam = url.searchParams.get('limit')
+    const limit = limitParam ? (parseInt(limitParam) || 100) : 100
     const type = url.searchParams.get('type') as any
     const ip = url.searchParams.get('ip')
+    const suspiciousIPs = url.searchParams.get('suspicious_ips') === 'true'
+    const thresholdParam = url.searchParams.get('threshold')
+    const threshold = thresholdParam ? (parseInt(thresholdParam) || 10) : 10
 
     let events
     if (type) {
@@ -24,10 +28,21 @@ export async function GET(request: NextRequest) {
       events = securityLogger.getRecentEvents(limit)
     }
 
-    return NextResponse.json({
+    const response: any = {
       events,
       total: events.length,
       timestamp: new Date().toISOString(),
+    }
+
+    // Add suspicious IPs if requested
+    if (suspiciousIPs) {
+      response.suspicious_ips = securityLogger.getSuspiciousIPs(threshold)
+    }
+
+    return NextResponse.json(response, {
+      headers: {
+        'cache-control': 'no-cache, no-store, must-revalidate',
+      },
     })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to retrieve security events' }, { status: 500 })
