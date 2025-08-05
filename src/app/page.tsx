@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ModuleType, convertCode, isValidModuleType } from './utils/moduleTypes'
+import { ExecutionMode, defaultExecutionMode } from './utils/executionTypes'
 import { EditorTab, createNewTab, isValidTab, isValidTabs } from './utils/tabs'
 import { generateUUID } from './utils/uuid'
 import { Sidebar } from './components/Sidebar'
@@ -31,6 +32,7 @@ function EditorContent() {
   const [tabs, setTabs] = useState<EditorTab[]>([createNewTab(urlModuleType || 'esm')])
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id)
   const activeTab = tabs.find(tab => tab.id === activeTabId)
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>(defaultExecutionMode)
   const [isPackagesModalOpen, setIsPackagesModalOpen] = useState(false)
   const [installedPackages, setInstalledPackages] = useState<PackageInfo[]>([])
   const [packageInput, setPackageInput] = useState('')
@@ -163,23 +165,48 @@ function EditorContent() {
 
     setIsRunning(true)
     try {
-      const response = await fetch('/api/execute', {
+      // Determine the API endpoint based on execution mode
+      const apiEndpoint = executionMode === 'wasm' ? '/api/execute/wasm' : '/api/execute'
+      
+      const requestBody = {
+        code: activeTab.code,
+        moduleType: activeTab.moduleType,
+        ...(executionMode === 'wasm' && {
+          wasmOptions: {
+            memoryLimit: '256MB',
+            cpuTimeLimit: '30s',
+            allowNetwork: false
+          }
+        })
+      }
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(executionMode === 'wasm' && {
+            'X-API-Key': 'development-key' // For demo purposes
+          })
         },
-        body: JSON.stringify({ code: activeTab.code, moduleType: activeTab.moduleType }),
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error)
+        throw new Error(data.error || `HTTP ${response.status}`)
       }
 
-      setOutput(data.output || 'No output')
-      if (data.installedPackages) {
-        setInstalledPackages(data.installedPackages)
+      // Handle different response formats
+      if (executionMode === 'wasm') {
+        const wasmInfo = data.wasmUsed ? ' (WASM)' : ' (Native fallback)'
+        const executionTime = data.executionTime ? ` [${data.executionTime}ms]` : ''
+        setOutput((data.output || 'No output') + wasmInfo + executionTime)
+      } else {
+        setOutput(data.output || 'No output')
+        if (data.installedPackages) {
+          setInstalledPackages(data.installedPackages)
+        }
       }
     } catch (error: unknown) {
       setOutput(`Error: ${error instanceof Error ? error.message : String(error)}`)
@@ -315,29 +342,35 @@ function EditorContent() {
   }
 
   return (
-    <main className="flex min-h-screen">
-      <Sidebar
-        tabs={tabs}
-        activeTabId={activeTabId}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        setActiveTabId={setActiveTabId}
-        updateTabName={updateTabName}
-        closeTab={closeTab}
-        addNewTab={addNewTab}
+    <main className="flex flex-col h-screen bg-vscode-bg">
+      {/* Menu Bar */}
+      <Navigation
+        activeModuleType={activeTab?.moduleType || 'esm'}
+        onModuleTypeChange={handleModuleTypeChange}
+        activeExecutionMode={executionMode}
+        onExecutionModeChange={setExecutionMode}
+        onOpenPackages={() => setIsPackagesModalOpen(true)}
+        onShare={() => setIsShareModalOpen(true)}
+        onEmbed={() => setIsEmbedModalOpen(true)}
+        installedPackagesCount={installedPackages.length}
       />
 
-      <div className="flex-1 flex flex-col p-4">
-        <Navigation
-          activeModuleType={activeTab?.moduleType || 'esm'}
-          onModuleTypeChange={handleModuleTypeChange}
-          onOpenPackages={() => setIsPackagesModalOpen(true)}
-          onShare={() => setIsShareModalOpen(true)}
-          onEmbed={() => setIsEmbedModalOpen(true)}
-          installedPackagesCount={installedPackages.length}
+      {/* Main Content Area */}
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar */}
+        <Sidebar
+          tabs={tabs}
+          activeTabId={activeTabId}
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+          setActiveTabId={setActiveTabId}
+          updateTabName={updateTabName}
+          closeTab={closeTab}
+          addNewTab={addNewTab}
         />
 
-        <div className="flex flex-1 gap-4">
+        {/* Editor and Output Area */}
+        <div className="flex flex-1 min-h-0">
           {activeTab && (
             <CodeEditor
               code={activeTab.code}
@@ -352,6 +385,7 @@ function EditorContent() {
         </div>
       </div>
 
+      {/* Modals */}
       <PackagesModal
         isOpen={isPackagesModalOpen}
         onClose={() => setIsPackagesModalOpen(false)}

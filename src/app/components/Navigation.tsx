@@ -1,14 +1,16 @@
 'use client'
 
 import { ModuleType } from '../utils/moduleTypes'
-import { FaGithub } from 'react-icons/fa'
-import { FaStar } from 'react-icons/fa'
+import { ExecutionMode, executionModeLabels } from '../utils/executionTypes'
+import { FaGithub, FaCube, FaCog, FaPlay, FaBox, FaShare, FaCode, FaStar } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { APP_CONFIG } from '../config/app'
 
 interface NavigationProps {
   activeModuleType: ModuleType
   onModuleTypeChange: (type: ModuleType) => void
+  activeExecutionMode: ExecutionMode
+  onExecutionModeChange: (mode: ExecutionMode) => void
   onOpenPackages: () => void
   onShare: () => void
   onEmbed: () => void
@@ -18,6 +20,8 @@ interface NavigationProps {
 export function Navigation({
   activeModuleType,
   onModuleTypeChange,
+  activeExecutionMode,
+  onExecutionModeChange,
   onOpenPackages,
   onShare,
   onEmbed,
@@ -40,76 +44,121 @@ export function Navigation({
   }, [])
 
   return (
-    <nav className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">RunJS</h1>
-        <div className="flex items-center gap-2 bg-gray-800 p-1 rounded">
-          <button
-            onClick={() => onModuleTypeChange('esm')}
-            className={`px-3 py-1 rounded cursor-pointer ${
-              activeModuleType === 'esm'
-                ? 'bg-primary text-white'
-                : 'text-gray-300 hover:text-white'
-            }`}
-          >
-            ES Modules
-          </button>
-          <button
-            onClick={() => onModuleTypeChange('commonjs')}
-            className={`px-3 py-1 rounded cursor-pointer ${
-              activeModuleType === 'commonjs'
-                ? 'bg-primary text-white'
-                : 'text-gray-300 hover:text-white'
-            }`}
-          >
-            CommonJS
-          </button>
+    <div className="h-9 bg-vscode-menu border-b border-vscode-border flex items-center justify-between px-4">
+      {/* Left side - Menu items */}
+      <div className="flex items-center">
+        <div className="flex items-center space-x-6">
+          <div className="text-vscode-text font-bold text-sm">RunJS</div>
+          
+          {/* Module Type Selector */}
+          <div className="flex items-center">
+            <span className="text-vscode-text-muted text-xs mr-2">Module:</span>
+            <div className="flex">
+              <button
+                onClick={() => onModuleTypeChange('esm')}
+                className={`px-2 py-1 text-xs border-r border-vscode-border first:rounded-l last:rounded-r ${
+                  activeModuleType === 'esm'
+                    ? 'bg-vscode-accent text-white'
+                    : 'bg-vscode-panel text-vscode-text hover:bg-vscode-hover'
+                }`}
+              >
+                ESM
+              </button>
+              <button
+                onClick={() => onModuleTypeChange('commonjs')}
+                className={`px-2 py-1 text-xs first:rounded-l last:rounded-r ${
+                  activeModuleType === 'commonjs'
+                    ? 'bg-vscode-accent text-white'
+                    : 'bg-vscode-panel text-vscode-text hover:bg-vscode-hover'
+                }`}
+              >
+                CJS
+              </button>
+            </div>
+          </div>
+          
+          {/* Execution Mode Selector */}
+          <div className="flex items-center">
+            <span className="text-vscode-text-muted text-xs mr-2">Runtime:</span>
+            <div className="flex">
+              <button
+                onClick={() => onExecutionModeChange('native')}
+                className={`px-2 py-1 text-xs flex items-center gap-1 border-r border-vscode-border first:rounded-l ${
+                  activeExecutionMode === 'native'
+                    ? 'bg-vscode-accent text-white'
+                    : 'bg-vscode-panel text-vscode-text hover:bg-vscode-hover'
+                }`}
+                title="Execute in standard Node.js environment"
+              >
+                <FaCog className="w-3 h-3" />
+                Native
+              </button>
+              <button
+                onClick={() => onExecutionModeChange('wasm')}
+                className={`px-2 py-1 text-xs flex items-center gap-1 last:rounded-r ${
+                  activeExecutionMode === 'wasm'
+                    ? 'bg-vscode-warning text-vscode-bg'
+                    : 'bg-vscode-panel text-vscode-text hover:bg-vscode-hover'
+                }`}
+                title="Execute in secure WebAssembly sandbox"
+              >
+                <FaCube className="w-3 h-3" />
+                WASM
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="flex items-center gap-4">
+
+      {/* Right side - Actions */}
+      <div className="flex items-center space-x-1">
         <button
           onClick={onOpenPackages}
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-1 px-2 py-1 text-xs text-vscode-text hover:bg-vscode-hover rounded"
+          title="Manage packages"
         >
-          Packages ({installedPackagesCount})
+          <FaBox className="w-3 h-3" />
+          <span>{installedPackagesCount}</span>
         </button>
+        
+        <button
+          onClick={onShare}
+          className="flex items-center gap-1 px-2 py-1 text-xs text-vscode-text hover:bg-vscode-hover rounded"
+          title="Share code"
+        >
+          <FaShare className="w-3 h-3" />
+        </button>
+        
+        <button
+          onClick={onEmbed}
+          className="flex items-center gap-1 px-2 py-1 text-xs text-vscode-text hover:bg-vscode-hover rounded"
+          title="Embed code"
+        >
+          <FaCode className="w-3 h-3" />
+        </button>
+        
         <a
           href={APP_CONFIG.social.githubRepo}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-primary hover:bg-blue-600 text-white px-4 py-1.5 rounded flex items-center gap-2 cursor-pointer transition-colors duration-200"
+          className="flex items-center gap-1 px-2 py-1 text-xs text-vscode-text hover:bg-vscode-hover rounded"
+          title="GitHub repository"
         >
-          <FaGithub className="text-lg" />
-          <FaStar className="text-lg text-yellow-300" />
+          <FaGithub className="w-3 h-3" />
+          <FaStar className="w-3 h-3 text-vscode-warning" />
           <span>{starCount !== null ? starCount.toLocaleString() : '...'}</span>
         </a>
+        
         <a
           href={APP_CONFIG.social.feedbackForm}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded cursor-pointer"
+          className="px-2 py-1 text-xs text-vscode-text hover:bg-vscode-hover rounded"
+          title="Send feedback"
         >
           Feedback
         </a>
-        <a
-          href="/credits"
-          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-1 rounded cursor-pointer"
-        >
-          Credits
-        </a>
-        <button
-          onClick={onShare}
-          className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 cursor-pointer"
-        >
-          Share
-        </button>
-        <button
-          onClick={onEmbed}
-          className="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 cursor-pointer"
-        >
-          Embed
-        </button>
       </div>
-    </nav>
+    </div>
   )
 }

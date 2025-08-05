@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_CONFIG.domains.baseUrl),
   icons: {
     icon: [
+      { url: '/favicon/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
       { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/favicon/favicon.ico', sizes: '48x48' },
@@ -18,16 +20,16 @@ export const metadata: Metadata = {
     other: [
       {
         rel: 'mask-icon',
-        url: '/favicon/safari-pinned-tab.svg',
-        color: '#5bbad5',
+        url: '/favicon/favicon.svg',
+        color: '#007acc',
       },
     ],
   },
   manifest: '/favicon/site.webmanifest',
   other: {
-    'msapplication-TileColor': '#2b5797',
+    'msapplication-TileColor': '#68a063',
     'msapplication-config': '/favicon/browserconfig.xml',
-    'theme-color': '#ffffff',
+    'theme-color': '#68a063',
   },
   openGraph: {
     title: 'RunJS - Node.js/JavaScript Playground',
@@ -50,19 +52,23 @@ export const metadata: Metadata = {
   },
 }
 
-function Footer() {
+function StatusBar() {
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-gray-900 text-gray-400 py-2 px-4 text-sm text-center border-t border-gray-800">
-      <div className="flex justify-center items-center gap-4">
-        <Link href="/privacy" className="hover:text-white transition-colors">
-          Privacy Policy
+    <div className="h-6 bg-vscode-accent text-white flex items-center justify-between px-4 text-xs font-vscode">
+      <div className="flex items-center space-x-4">
+        <Link href="/privacy" className="hover:bg-white/10 px-2 py-1 rounded">
+          Privacy
         </Link>
-        <span>•</span>
-        <Link href="/terms" className="hover:text-white transition-colors">
-          Terms of Service
+        <Link href="/terms" className="hover:bg-white/10 px-2 py-1 rounded">
+          Terms
         </Link>
       </div>
-    </footer>
+      <div className="flex items-center space-x-4">
+        <span>RunJS v1.0.0</span>
+        <span>JavaScript</span>
+        <span>UTF-8</span>
+      </div>
+    </div>
   )
 }
 
@@ -78,10 +84,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ></script>
         )}
       </head>
-      <body className="bg-secondary min-h-screen">
+      <body className="bg-vscode-bg min-h-screen font-vscode text-vscode-text flex flex-col">
         <Analytics />
-        {children}
-        <Footer />
+        <div className="flex-1 flex flex-col">
+          {children}
+        </div>
+        <StatusBar />
       </body>
     </html>
   )
