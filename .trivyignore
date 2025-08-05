@@ -1,0 +1,15 @@
+# Trivy ignore file for RunJS security scanning
+# This file contains vulnerabilities to ignore during Trivy scans
+
+# Development dependencies - not in production
+CVE-2024-4067  # Webpack dev server - development only
+CVE-2023-45133 # Babel - development only
+
+# False positives or accepted risks
+# Add specific CVEs here with justification comments
+
+# Node.js base image vulnerabilities that are patched in runtime
+# (Update these as new versions are released)
+
+# Temporary ignores for testing (remove after fixes)
+# CVE-YYYY-XXXXX # Description of why ignored and removal date

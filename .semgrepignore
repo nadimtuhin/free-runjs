@@ -1,0 +1,29 @@
+# Semgrep ignore file for RunJS
+# Ignore certain files and directories from SAST scanning
+
+# Dependencies and build artifacts
+node_modules/
+.next/
+dist/
+coverage/
+.nyc_output/
+
+# Test files (may contain intentionally insecure code for testing)
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+tests/
+__tests__/
+
+# Documentation and configuration
+*.md
+*.json
+*.yaml
+*.yml
+.gitignore
+.dockerignore
+
+# Specific files to ignore
+package-lock.json
+yarn.lock

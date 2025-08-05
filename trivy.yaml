@@ -1,0 +1,41 @@
+# Trivy configuration for RunJS security scanning
+# https://aquasecurity.github.io/trivy/latest/docs/configuration/
+
+# Global settings
+format: json
+output: security-reports/trivy-report.json
+exit-code: 1  # Exit with error code if vulnerabilities found
+quiet: false
+debug: false
+
+# Vulnerability scanning settings
+severity: HIGH,CRITICAL
+ignore-unfixed: false
+skip-files:
+  - "node_modules/**"
+  - "**/*.test.ts"
+  - "**/*.test.js"
+  - ".next/**"
+  - "coverage/**"
+
+# Security scanners to run
+scanners:
+  - vuln      # Vulnerability scanning
+  - secret    # Secret detection
+  - config    # Configuration issues
+
+# Secret detection settings
+secret:
+  config: .trivysecret.yaml
+
+# Vulnerability database settings
+db:
+  light: true
+  skip-update: false
+
+# Report settings
+timeout: 10m0s
+cache-dir: .trivy-cache
+
+# Ignore policies
+ignore-policy: .trivyignore

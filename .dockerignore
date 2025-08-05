@@ -1,19 +1,64 @@
-.git
-.github
+# Docker ignore file for security-hardened builds
+
+# Development files
 node_modules
-.next
-*.md
-.env*
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+.nuxt/
+dist/
+
+# Testing
+coverage/
+.nyc_output/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+jest.config.js
+jest.setup.js
+
+# Development tools
+.git/
+.gitignore
 .dockerignore
-Dockerfile
-.eslintrc*
-.prettier*
-.editorconfig
-*.log
-temp
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Security and scanning
+.trivy-cache/
+security-reports/
+.semgrepignore
+.trivyignore
+
+# Documentation
+README.md
+docs/
+*.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
 .DS_Store
-captain-definition
-.envrc
-build-local.sh
-caprover-deploy.sh
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/

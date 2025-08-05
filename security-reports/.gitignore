@@ -1,0 +1,6 @@
+# Security reports directory
+# Keep directory but ignore report contents
+
+*
+!.gitignore
+!README.md

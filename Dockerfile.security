@@ -1,0 +1,80 @@
+# Multi-stage security-hardened Dockerfile for RunJS
+# This Dockerfile includes security scanning and hardening measures
+
+# Security scan stage
+FROM aquasec/trivy:latest AS security-scanner
+WORKDIR /app
+COPY package*.json ./
+COPY . .
+RUN trivy fs --config trivy.yaml --format json --output /tmp/trivy-report.json .
+
+# Build stage with security hardening
+FROM node:18-alpine AS builder
+
+# Install security updates
+RUN apk update && apk upgrade && apk add --no-cache \
+    dumb-init \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci --only=production --ignore-scripts && \
+    npm cache clean --force
+
+# Copy source code and build
+COPY --chown=nextjs:nodejs . .
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine AS runner
+
+# Install security updates and required packages
+RUN apk update && apk upgrade && apk add --no-cache \
+    dumb-init \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs
+
+WORKDIR /app
+
+# Set environment to production
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy security report from scanner stage
+COPY --from=security-scanner /tmp/trivy-report.json ./security-reports/
+
+# Set up proper permissions
+RUN chown -R nextjs:nodejs /app && \
+    chmod -R 755 /app
+
+# Security hardening
+RUN rm -rf /tmp/* /var/tmp/* && \
+    find /app -type f -name "*.sh" -exec chmod +x {} \;
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD node server.js --healthcheck || exit 1
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "server.js"]
