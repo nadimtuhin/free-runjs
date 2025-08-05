@@ -17,6 +17,8 @@ skip-files:
   - "**/*.test.js"
   - ".next/**"
   - "coverage/**"
+  - "temp/wasm/**"
+  - "*.wasm"
 
 # Security scanners to run
 scanners:
