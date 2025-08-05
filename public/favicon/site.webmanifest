@@ -1,7 +1,29 @@
 {
-  "name": "RunJS",
+  "name": "RunJS - JavaScript Playground",
   "short_name": "RunJS",
+  "description": "Professional JavaScript code execution environment with VS Code-like interface",
   "icons": [
+    {
+      "src": "/favicon/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/favicon/android-chrome-192x192.png",
       "sizes": "192x192",
@@ -13,7 +35,12 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  "theme_color": "#68a063",
+  "background_color": "#68a063",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "start_url": "/",
+  "scope": "/",
+  "categories": ["developer", "productivity", "utilities"],
+  "lang": "en"
 }

@@ -1,0 +1,7 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <!-- Node.js hexagon background (full size) -->
+  <polygon points="8,0 16,4 16,12 8,16 0,12 0,4" fill="#68a063"/>
+  
+  <!-- JavaScript yellow play button inside (larger) -->
+  <polygon points="5,5 5,11 11,8" fill="#f7df1e"/>
+</svg>
