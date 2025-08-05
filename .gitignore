@@ -39,6 +39,25 @@ next-env.d.ts
 temp/*
 !temp/.gitkeep
 
+# WASM runtime binaries
+bin/
+
+# Package manager files
+pnpm-lock.yaml
+.npmrc
+
+# Claude Code configuration
+.claude/
+
+# Security backups
+*.yaml.bak
+*.yml.bak
+
+# Temporary test files
+temp-*.ts
+temp-*.js
+test-*.json
+
 # Playwright
 node_modules/
 /test-results/
