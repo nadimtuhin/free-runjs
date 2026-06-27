@@ -88,7 +88,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
                 </a>
 
                 <a
-                  href={`https://www.facebook.com/dialog/share?app_id=${APP_CONFIG.social.facebookAppId}&href=${encodeURIComponent(APP_CONFIG.contact.website)}&display=popup`}
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_CONFIG.contact.website)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors"
