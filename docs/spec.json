@@ -1,0 +1,2 @@
+{ "banners": { "h-start": "GET STARTED", "h-use": "HOW TO USE IT", "h-help": "NEED HELP", "h-dev": "FOR DEVELOPERS" },
+  "hero": { "kicker": "OPEN SOURCE · PLAYGROUND", "title": "RunJS", "tagline": "Write JavaScript in the browser. Install npm packages. Run it." } }

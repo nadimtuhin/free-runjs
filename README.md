@@ -1,4 +1,85 @@
-# RunJS - JavaScript Playground
+<div align="center">
+
+# RunJS
+
+![RunJS, a JavaScript playground in your browser with real npm packages](https://raw.githubusercontent.com/nadimtuhin/free-runjs/main/docs/images/hero.svg)
+
+**Try JavaScript without a project.** Open the page, write code, hit Run.
+
+[`MIT`](LICENSE) `Node 18+`
+
+</div>
+
+<br>
+
+Testing an idea or an npm package usually means a new folder, an `npm init`, and a terminal. RunJS gives you an editor and an output panel in one tab. It runs ES Modules and CommonJS, and installs the npm packages you import when you hit Run.
+
+<br>
+
+![Get started](https://raw.githubusercontent.com/nadimtuhin/free-runjs/main/docs/images/h-start.svg)
+
+To run your own copy, you need Node 18 or newer. Paste each line as is.
+
+**1. Get the code and install:**
+
+```bash
+git clone https://github.com/nadimtuhin/free-runjs.git
+cd free-runjs
+npm install
+```
+
+**2. Start it:**
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). You should see the editor.
+
+<br>
+
+![How to use it](https://raw.githubusercontent.com/nadimtuhin/free-runjs/main/docs/images/h-use.svg)
+
+**Write.** Pick ES Modules or CommonJS and type your JavaScript.
+
+**Install.** Click "Packages", type a package name, press Enter.
+
+**Run.** Click "Run", or press Ctrl+Enter (Cmd+Enter on Mac).
+
+**Share.** Your code is saved in the URL. Copy the link.
+
+<br>
+
+![Need help](https://raw.githubusercontent.com/nadimtuhin/free-runjs/main/docs/images/h-help.svg)
+
+<details>
+<summary>Run fails because of a missing temp folder</summary>
+
+Create the folders it runs code in: `mkdir -p temp/cjs temp/esm`. `npm install` normally does this for you.
+
+</details>
+
+<details>
+<summary>"Port already in use"</summary>
+
+Start it on another port: `PORT=3001 npm run dev`.
+
+</details>
+
+<details>
+<summary>Something about the Node version</summary>
+
+You need Node 18 or newer. Run `node --version` to check.
+
+</details>
+
+<br>
+
+![For developers](https://raw.githubusercontent.com/nadimtuhin/free-runjs/main/docs/images/h-dev.svg)
+
+Everything below is reference. You don't need it to get started.
+
+[Features](#features) · [Installation](#installation) · [Usage](#usage) · [Structure](#project-structure) · [Built with](#built-with) · [Common issues](#common-issues)
 
 A web-based JavaScript playground that lets you write and execute JavaScript code in both ES Modules and CommonJS formats.
 
@@ -38,15 +119,7 @@ npm install
 mkdir -p temp/cjs temp/esm
 ```
 
-4. Set up environment variables:
-```bash
-touch .env.local
-```
-
-Add to `.env.local`:
-```env
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-```
+4. Optional environment variables: `NEXT_PUBLIC_DOMAIN` and `NEXT_PUBLIC_PROTOCOL` (set them in `.env.local`). Dev defaults to `localhost:3000`, so you can skip this locally.
 
 5. Run the development server:
 ```bash
