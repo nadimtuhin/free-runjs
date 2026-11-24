@@ -7,6 +7,10 @@ import { join } from 'path';
 
 const TEMP = join(process.cwd(), 'temp');
 
+// Every request of a module type shares one temp dir (code file and npm
+// install), so these tests must not run concurrently with each other.
+test.describe.configure({ mode: 'default' });
+
 async function run(
   request: import('@playwright/test').APIRequestContext,
   code: string,
@@ -103,5 +107,46 @@ test.describe('execute API still installs and runs real packages', () => {
     );
     expect(status).toBe(200);
     expect(body.output).toContain('true');
+  });
+
+  test('commonjs require of a scoped npm package and a subpath', async ({ request }) => {
+    const { status, body } = await run(
+      request,
+      [
+        "const { deepEqual } = require('@hapi/hoek');",
+        "const deepEqualSub = require('@hapi/hoek/deepEqual');",
+        "console.log('scoped', deepEqual({ a: 1 }, { a: 1 }), deepEqualSub([1], [2]));",
+      ].join('\n'),
+      'commonjs',
+    );
+    expect(status).toBe(200);
+    expect(body.output).toContain('scoped true false');
+  });
+
+  test('esm import of a scoped npm package and a subpath', async ({ request }) => {
+    const { status, body } = await run(
+      request,
+      [
+        "import { deepEqual } from '@hapi/hoek';",
+        "import deepEqualSub from '@hapi/hoek/deepEqual';",
+        "console.log('scoped', deepEqual({ a: 1 }, { a: 1 }), deepEqualSub([1], [2]));",
+      ].join('\n'),
+      'esm',
+    );
+    expect(status).toBe(200);
+    expect(body.output).toContain('scoped true false');
+  });
+
+  test('scoped package name cannot inject shell commands', async ({ request }) => {
+    const marker = join(TEMP, 'esm', 'pwned-marker');
+    rmSync(marker, { force: true });
+    const { status, body } = await run(
+      request,
+      'import x from "@scope;touch pwned-marker/pkg";',
+      'esm',
+    );
+    expect(existsSync(marker)).toBe(false);
+    expect(status).toBe(400);
+    expect(body.error).toMatch(/invalid package name/i);
   });
 });
