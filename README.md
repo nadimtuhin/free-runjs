@@ -6,7 +6,7 @@
 
 **Try JavaScript without a project.** Open the page, write code, hit Run.
 
-[`MIT`](LICENSE) `Node 18+`
+[`MIT`](LICENSE) `Node 18.17+`
 
 </div>
 
@@ -18,7 +18,7 @@ Testing an idea or an npm package usually means a new folder, an `npm init`, and
 
 ![Get started](https://raw.githubusercontent.com/nadimtuhin/free-runjs/main/docs/images/h-start.svg)
 
-To run your own copy, you need Node 18 or newer. Paste each line as is.
+To run your own copy, you need Node 18.17 or newer. Paste each line as is.
 
 **1. Get the code and install:**
 
@@ -69,7 +69,7 @@ Start it on another port: `PORT=3001 npm run dev`.
 <details>
 <summary>Something about the Node version</summary>
 
-You need Node 18 or newer. Run `node --version` to check.
+You need Node 18.17 or newer. Run `node --version` to check.
 
 </details>
 
@@ -98,7 +98,7 @@ A web-based JavaScript playground that lets you write and execute JavaScript cod
 
 ### Prerequisites
 
-- Node.js v18 or higher
+- Node.js v18.17 or higher
 - npm or yarn
 
 ### Installation
@@ -169,7 +169,7 @@ npm start
 
 1. **Missing temp directory**: Create the temp directories as described in the installation steps.
 
-2. **Node.js version**: Requires v18 or higher. Check with:
+2. **Node.js version**: Requires v18.17 or higher. Check with:
 ```bash
 node --version
 ```

@@ -263,10 +263,11 @@ function EditorContent() {
         },
         body: JSON.stringify({
           code: `
-            const { execSync } = require('child_process');
+            const { execFileSync } = require('child_process');
+            const name = ${JSON.stringify(packageName)};
             try {
-              execSync('npm uninstall ${packageName}', { stdio: 'inherit' });
-              console.log('Successfully uninstalled ${packageName}');
+              execFileSync('npm', ['uninstall', '--', name], { stdio: 'inherit' });
+              console.log('Successfully uninstalled ' + name);
             } catch (error) {
               console.error('Failed to uninstall package:', error.message);
             }

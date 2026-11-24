@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { writeFile, mkdir, readFile, access } from 'fs/promises';
 import { join } from 'path';
-
-const execAsync = promisify(exec);
+import { extractRequireSpecifiers, npmInstall, runNode, toInstallablePackages } from '../sandbox';
 const BASE_TEMP_DIR = join(process.cwd(), 'temp');
 
 // Store debug logs
@@ -83,17 +80,14 @@ async function initTempDir() {
 
       // Reinstall packages to ensure they're compatible
       if (Object.keys(packageJson.dependencies || {}).length > 0) {
-        const deps = Object.keys(packageJson.dependencies).join(' ');
+        const deps = Object.keys(packageJson.dependencies);
         console.debug('[initTempDir] Reinstalling dependencies:', deps);
-        await execAsync(`npm install ${deps}`, { cwd: tempDir });
+        await npmInstall(tempDir, deps);
       }
     }
   } catch {
     console.debug('[initTempDir] No package.json found, creating new one');
-    // Initialize npm first
-    await execAsync('npm init -y', { cwd: tempDir });
-
-    // Then modify the generated package.json
+    // Create a fresh package.json
     const packageJson: PackageJson = {
       name: 'runjs-temp-cjs',
       version: '1.0.0',
@@ -109,18 +103,9 @@ async function initTempDir() {
 
 function extractPackages(code: string): string[] {
   console.debug('[extractPackages] Analyzing code for package dependencies');
-  const packages = new Set<string>();
-
-  // Match require statements: require('package-name') or require("package-name")
-  const requireRegex = /require\(['"]([^'"@][^'"]*)['"]\)/g;
-  let match = requireRegex.exec(code);
-  while (match) {
-    packages.add(match[1].split('/')[0]); // Get base package name
-    match = requireRegex.exec(code);
-  }
-
-  console.debug('[extractPackages] Found packages:', Array.from(packages));
-  return Array.from(packages);
+  const packages = toInstallablePackages(extractRequireSpecifiers(code));
+  console.debug('[extractPackages] Found packages:', packages);
+  return packages;
 }
 
 async function getInstalledPackages(): Promise<{ name: string; version: string }[]> {
@@ -152,11 +137,9 @@ async function installPackages(packages: string[]): Promise<string> {
     }
 
     console.debug('[installPackages] Installing packages:', packagesToInstall);
-    const { stdout, stderr } = await execAsync(`npm install ${packagesToInstall.join(' ')}`, {
-      cwd: getTempDir()
-    });
+    const output = await npmInstall(getTempDir(), packagesToInstall);
     console.debug('[installPackages] Installation complete');
-    return stdout + stderr;
+    return output;
   } catch (error) {
     console.error('[installPackages] Installation failed:', error);
     throw new Error(`Failed to install packages: ${error instanceof Error ? error.message : String(error)}`);
@@ -204,13 +187,10 @@ async function executeCode(code: string): Promise<string> {
   // Execute the code
   try {
     console.debug('[executeCode] Executing code with Node.js');
-    const { stdout, stderr } = await execAsync(`node ${setupPath}`, {
-      cwd: tempDir,
-      env: {
-        ...process.env,
-        NODE_PATH: join(tempDir, 'node_modules')
-      }
-    });
+    const { stdout, stderr, code: exitCode } = await runNode(tempDir, setupPath);
+    if (exitCode !== 0) {
+      throw new Error(stderr.trim() || `Process exited with code ${exitCode}`);
+    }
 
     if (stderr && !stderr.includes('ExperimentalWarning')) {
       console.debug('[executeCode] Execution produced error:', stderr);

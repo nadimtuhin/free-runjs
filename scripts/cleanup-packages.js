@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const { join } = require('path');
 const { readFileSync, writeFileSync } = require('fs');
 
@@ -23,7 +23,9 @@ function cleanupPackages(dir) {
     console.log(`Uninstalling ${packagesToUninstall.length} packages from ${dir}:`, packagesToUninstall);
 
     // Uninstall all packages
-    execSync(`cd ${join(BASE_TEMP_DIR, dir)} && npm uninstall ${packagesToUninstall.join(' ')}`, {
+    // Argument array, no shell: names come from a file user code can write to.
+    execFileSync('npm', ['uninstall', '--', ...packagesToUninstall], {
+      cwd: join(BASE_TEMP_DIR, dir),
       stdio: 'inherit'
     });
 
