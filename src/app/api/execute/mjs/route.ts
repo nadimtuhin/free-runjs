@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { writeFile, mkdir, readFile, access } from 'fs/promises';
 import { join } from 'path';
-
-const execAsync = promisify(exec);
+import { npmInstall, runNode, toInstallablePackages } from '../sandbox';
 const BASE_TEMP_DIR = join(process.cwd(), 'temp');
 
 function getTempDir(): string {
@@ -35,15 +32,12 @@ async function initTempDir() {
 
       // Reinstall packages to ensure they're compatible
       if (Object.keys(packageJson.dependencies || {}).length > 0) {
-        const deps = Object.keys(packageJson.dependencies).join(' ');
-        await execAsync(`npm install ${deps}`, { cwd: tempDir });
+        const deps = Object.keys(packageJson.dependencies);
+        await npmInstall(tempDir, deps);
       }
     }
   } catch {
-    // Initialize npm first
-    await execAsync('npm init -y', { cwd: tempDir });
-
-    // Then modify the generated package.json
+    // Create a fresh package.json
     const packageJson: PackageJson = {
       name: 'runjs-temp-esm',
       version: '1.0.0',
@@ -63,11 +57,11 @@ function extractPackages(code: string): string[] {
   const importRegex = /import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?['"]([^'"@][^'"]*)['"]/g;
   let match = importRegex.exec(code);
   while (match) {
-    packages.add(match[1].split('/')[0]); // Get base package name
+    packages.add(match[1]);
     match = importRegex.exec(code);
   }
 
-  return Array.from(packages);
+  return toInstallablePackages(Array.from(packages));
 }
 
 async function getInstalledPackages(): Promise<{ name: string; version: string }[]> {
@@ -92,10 +86,8 @@ async function installPackages(packages: string[]): Promise<string> {
       return 'All packages already installed';
     }
 
-    const { stdout, stderr } = await execAsync(`npm install ${packagesToInstall.join(' ')}`, {
-      cwd: getTempDir()
-    });
-    return stdout + stderr;
+    const output = await npmInstall(getTempDir(), packagesToInstall);
+    return output;
   } catch (error) {
     throw new Error(`Failed to install packages: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -142,13 +134,10 @@ async function executeCode(code: string): Promise<string> {
 
   // Execute the code
   try {
-    const { stdout, stderr } = await execAsync(`node ${setupPath}`, {
-      cwd: tempDir,
-      env: {
-        ...process.env,
-        NODE_PATH: join(tempDir, 'node_modules')
-      }
-    });
+    const { stdout, stderr, code: exitCode } = await runNode(tempDir, setupPath);
+    if (exitCode !== 0) {
+      throw new Error(stderr.trim() || `Process exited with code ${exitCode}`);
+    }
 
     if (stderr && !stderr.includes('ExperimentalWarning')) {
       return `Error: ${stderr}`;
