@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir, readFile, access } from 'fs/promises';
 import { join } from 'path';
-import { npmInstall, runNode, toInstallablePackages } from '../sandbox';
+import { extractRequireSpecifiers, npmInstall, runNode, toInstallablePackages } from '../sandbox';
 const BASE_TEMP_DIR = join(process.cwd(), 'temp');
 
 // Store debug logs
@@ -103,18 +103,9 @@ async function initTempDir() {
 
 function extractPackages(code: string): string[] {
   console.debug('[extractPackages] Analyzing code for package dependencies');
-  const packages = new Set<string>();
-
-  // Match require statements: require('package-name') or require("package-name")
-  const requireRegex = /require\(['"]([^'"@][^'"]*)['"]\)/g;
-  let match = requireRegex.exec(code);
-  while (match) {
-    packages.add(match[1]);
-    match = requireRegex.exec(code);
-  }
-
-  console.debug('[extractPackages] Found packages:', Array.from(packages));
-  return toInstallablePackages(Array.from(packages));
+  const packages = toInstallablePackages(extractRequireSpecifiers(code));
+  console.debug('[extractPackages] Found packages:', packages);
+  return packages;
 }
 
 async function getInstalledPackages(): Promise<{ name: string; version: string }[]> {

@@ -8,14 +8,48 @@ export const INSTALL_TIMEOUT_MS = Number(process.env.RUNJS_INSTALL_TIMEOUT_MS) |
 export const MAX_OUTPUT_BYTES = Number(process.env.RUNJS_MAX_OUTPUT_BYTES) || 1024 * 1024;
 export const MAX_PACKAGES = Number(process.env.RUNJS_MAX_PACKAGES) || 10;
 
-// npm's naming rules (validate-npm-package-name, "valid for old packages", so
-// legacy names like JSONStream still work): at most 214 chars, URL-safe
-// characters only, no leading dot or underscore. A leading dash is also
-// rejected so a name can never be read as a CLI flag.
-const NPM_NAME = /^(?:@[a-zA-Z0-9~][a-zA-Z0-9._~-]*\/)?[a-zA-Z0-9~][a-zA-Z0-9._~-]*$/;
+// Valid npm package names, scoped or not: lowercase, URL-safe characters
+// only, no leading dot or underscore. The name is passed to npm as its own
+// argv entry (no shell), so the character set alone keeps it from being
+// interpreted by a shell; a leading dash is also rejected so a name can never
+// be read as a CLI flag such as `-g`.
+const NPM_NAME = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
 
 export function isValidPackageName(name: string): boolean {
-  return name.length > 0 && name.length <= 214 && NPM_NAME.test(name);
+  return (
+    name.length > 0 &&
+    name.length <= 214 &&
+    !name.startsWith('-') &&
+    NPM_NAME.test(name)
+  );
+}
+
+// `import x from 'spec'`, `import { a } from "spec"`, `import 'spec'`
+const IMPORT_RE = /import\s+(?:[\w*\s{},$]*\s+from\s+)?['"]([^'"]+)['"]/g;
+// `require('spec')`, `require("spec")`
+const REQUIRE_RE = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
+
+function matchAll(code: string, re: RegExp): string[] {
+  return Array.from(code.matchAll(re), (m) => m[1]);
+}
+
+/** Module specifiers from ESM import statements, including `@scope/pkg`. */
+export function extractImportSpecifiers(code: string): string[] {
+  return matchAll(code, IMPORT_RE);
+}
+
+/** Module specifiers from CommonJS require calls, including `@scope/pkg`. */
+export function extractRequireSpecifiers(code: string): string[] {
+  return matchAll(code, REQUIRE_RE);
+}
+
+/**
+ * The package a bare specifier belongs to: `pkg/sub` -> `pkg`,
+ * `@scope/pkg/sub` -> `@scope/pkg`.
+ */
+function packageNameOf(spec: string): string {
+  const parts = spec.split('/');
+  return spec.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
 }
 
 /**
@@ -27,7 +61,7 @@ export function toInstallablePackages(specifiers: string[]): string[] {
   const packages = new Set<string>();
   for (const spec of specifiers) {
     if (spec.startsWith('.') || spec.startsWith('/') || isBuiltin(spec)) continue;
-    const name = spec.split('/')[0];
+    const name = packageNameOf(spec);
     if (!isValidPackageName(name)) {
       throw new Error(`Invalid package name: ${JSON.stringify(name)}`);
     }
@@ -144,7 +178,7 @@ export async function npmInstall(cwd: string, names: string[]): Promise<string> 
   for (const name of names) {
     if (!isValidPackageName(name)) throw new Error(`Invalid package name: ${JSON.stringify(name)}`);
   }
-  const { stdout, stderr, code } = await run('npm', ['install', ...names], {
+  const { stdout, stderr, code } = await run('npm', ['install', '--', ...names], {
     cwd,
     env: installEnv(),
     timeoutMs: INSTALL_TIMEOUT_MS,

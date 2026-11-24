@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -23,10 +23,10 @@ const generateImages = async (url) => {
   }
 
   console.log('📸 Generating OpenGraph image...');
-  execSync(`npx playwright screenshot ${url} public/og-image.png --viewport-size=1200,630 --wait-for-timeout=5000`, { stdio: 'inherit' });
+  execFileSync('npx', ['playwright', 'screenshot', url, 'public/og-image.png', '--viewport-size=1200,630', '--wait-for-timeout=5000'], { stdio: 'inherit' });
 
   console.log('🎨 Generating favicon source image...');
-  execSync(`npx playwright screenshot ${url} public/favicon/source.png --viewport-size=512,512 --wait-for-timeout=5000`, { stdio: 'inherit' });
+  execFileSync('npx', ['playwright', 'screenshot', url, 'public/favicon/source.png', '--viewport-size=512,512', '--wait-for-timeout=5000'], { stdio: 'inherit' });
 
   console.log('✨ Generating favicons...');
   const sizes = [
@@ -42,17 +42,14 @@ const generateImages = async (url) => {
   // Generate all favicon sizes
   sizes.forEach(({ size, name }) => {
     console.log(`Generating ${name}...`);
-    execSync(`magick public/favicon/source.png -resize ${size} public/favicon/${name}`, { stdio: 'inherit' });
+    execFileSync('magick', ['public/favicon/source.png', '-resize', size, `public/favicon/${name}`], { stdio: 'inherit' });
   });
 
   // Generate Safari pinned tab SVG
   console.log('Generating safari-pinned-tab.svg...');
-  execSync(
-    'magick public/favicon/source.png -colorspace gray -edge 1 -negate -resize 512x512 public/favicon/temp.pnm && ' +
-    'potrace public/favicon/temp.pnm -s -o public/favicon/safari-pinned-tab.svg && ' +
-    'rm public/favicon/temp.pnm',
-    { stdio: 'inherit' }
-  );
+  execFileSync('magick', ['public/favicon/source.png', '-colorspace', 'gray', '-edge', '1', '-negate', '-resize', '512x512', 'public/favicon/temp.pnm'], { stdio: 'inherit' });
+  execFileSync('potrace', ['public/favicon/temp.pnm', '-s', '-o', 'public/favicon/safari-pinned-tab.svg'], { stdio: 'inherit' });
+  fs.unlinkSync(path.join(faviconDir, 'temp.pnm'));
 
   // Clean up source image
   fs.unlinkSync(path.join(faviconDir, 'source.png'));

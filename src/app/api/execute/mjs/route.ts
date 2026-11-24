@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir, readFile, access } from 'fs/promises';
 import { join } from 'path';
-import { npmInstall, runNode, toInstallablePackages } from '../sandbox';
+import { extractImportSpecifiers, npmInstall, runNode, toInstallablePackages } from '../sandbox';
 const BASE_TEMP_DIR = join(process.cwd(), 'temp');
 
 function getTempDir(): string {
@@ -51,17 +51,7 @@ async function initTempDir() {
 }
 
 function extractPackages(code: string): string[] {
-  const packages = new Set<string>();
-
-  // Match import statements: import ... from 'package-name' or import ... from "package-name"
-  const importRegex = /import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?['"]([^'"@][^'"]*)['"]/g;
-  let match = importRegex.exec(code);
-  while (match) {
-    packages.add(match[1]);
-    match = importRegex.exec(code);
-  }
-
-  return toInstallablePackages(Array.from(packages));
+  return toInstallablePackages(extractImportSpecifiers(code));
 }
 
 async function getInstalledPackages(): Promise<{ name: string; version: string }[]> {
